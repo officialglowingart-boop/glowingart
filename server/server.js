@@ -1,7 +1,7 @@
 const express = require("express")
-const mongoose = require("mongoose")
 const cors = require("cors")
 const dotenv = require("dotenv")
+const connectDB = require("./config/database")
 
 // Load environment variables
 dotenv.config()
@@ -12,6 +12,7 @@ const app = express()
 app.use(cors({
   origin: [
     "http://localhost:3000",
+    "http://localhost:5173", 
     "https://glowingart-official.vercel.app"
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
@@ -27,19 +28,11 @@ app.use(cors({
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
+// Connect to MongoDB (remove the old connection code)
+connectDB();
 
-
-// MongoDB connection
-mongoose
-  .connect(process.env.MONGODB_URI , {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.log("MongoDB connection error:", err))
-
-// Initialize notification scheduler
-require("./utils/scheduler")
+// Initialize notification scheduler (comment out for serverless)
+// require("./utils/scheduler")
 
 // Routes
 app.use("/api/auth", require("./routes/auth"))
@@ -55,7 +48,12 @@ app.get("/", (req, res) => {
   res.json({ message: "Glowing Gallery API Server" })
 })
 
-const PORT = process.env.PORT || 5000
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
-})
+// Only start server if not in serverless environment
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`)
+  })
+}
+
+module.exports = app;
