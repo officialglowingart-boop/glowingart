@@ -9,7 +9,21 @@ dotenv.config()
 const app = express()
 
 // Middleware
-app.use(cors())
+app.use(cors({
+  origin: [
+    "http://localhost:3000",
+    "https://glowingart-official.vercel.app"
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
+  allowedHeaders: [
+    "Content-Type", 
+    "Authorization", 
+    "X-Requested-With",
+    "Accept",
+    "Origin"
+  ],
+  credentials: true
+}))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
