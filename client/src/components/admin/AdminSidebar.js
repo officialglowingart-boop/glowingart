@@ -19,38 +19,44 @@ const AdminSidebar = ({ activeSection, setActiveSection }) => {
     {
       id: "dashboard",
       label: "Dashboard",
-      icon: "📊",
+      icon: "",
       description: "Overview & Statistics",
     },
     {
       id: "products",
       label: "Products",
-      icon: "🖼️",
+      icon: "",
       description: "Manage Products",
     },
     {
       id: "categories",
       label: "Categories",
-      icon: "📂",
+      icon: "",
       description: "Manage Categories",
     },
     {
       id: "orders",
       label: "Orders",
-      icon: "📦",
+      icon: "",
       description: "Order Management",
     },
     {
       id: "reviews",
       label: "Reviews",
-      icon: "⭐",
+      icon: "",
       description: "Review Management",
     },
     {
       id: "payments",
       label: "Payments",
-      icon: "💳",
+      icon: "",
       description: "Payment Verification",
+    },
+    {
+      id: "coupons",
+      label: "Coupons",
+      icon: "",
+      description: "Coupon Management",
     },
   ]
 

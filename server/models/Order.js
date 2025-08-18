@@ -81,6 +81,14 @@ const orderSchema = new mongoose.Schema(
         type: Number,
         default: 0,
       },
+      couponId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Coupon",
+      },
+      discountType: {
+        type: String,
+        enum: ["percentage", "fixed"],
+      },
     },
     total: {
       type: Number,
@@ -94,7 +102,7 @@ const orderSchema = new mongoose.Schema(
     paymentStatus: {
       type: String,
       default: "pending",
-      enum: ["pending", "paid", "failed", "refunded"],
+      enum: ["pending", "paid", "failed", "refunded", "rejected"],
     },
     paymentDetails: {
       transactionId: String,
@@ -123,6 +131,13 @@ orderSchema.pre("validate", async function (next) {
     this.orderNumber = `GG${randomNumber}${timestamp}`
   }
   next()
+})
+
+orderSchema.post("save", async (doc) => {
+  if (doc.paymentStatus === "paid" && doc.discountCode?.couponId) {
+    const Coupon = mongoose.model("Coupon")
+    await Coupon.findByIdAndUpdate(doc.discountCode.couponId, { $inc: { usedCount: 1 } })
+  }
 })
 
 module.exports = mongoose.model("Order", orderSchema)

@@ -10,6 +10,7 @@ import OrderManagement from "../../components/admin/OrderManagement"
 import CategoryManagement from "../../components/admin/CategoryManagement"
 import ReviewManagement from "../../components/admin/ReviewManagement"
 import PaymentVerification from "../../components/admin/PaymentVerification"
+import CouponManagement from "../../components/admin/CouponManagement"
 
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState("dashboard")
@@ -161,6 +162,9 @@ const AdminDashboard = () => {
 
       case "payments":
         return <PaymentVerification />
+
+      case "coupons":
+        return <CouponManagement />
 
       default:
         return <div className="p-6">Section not found</div>

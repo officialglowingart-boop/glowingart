@@ -12,7 +12,7 @@ const app = express()
 app.use(cors({
   origin: [
     "http://localhost:3000",
-    "http://localhost:5173", 
+    "https://glowing-art.com", 
     "https://glowingart-official.vercel.app"
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
@@ -42,6 +42,7 @@ app.use("/api/reviews", require("./routes/reviews"))
 app.use("/api/orders", require("./routes/orders"))
 app.use("/api/admin", require("./routes/admin"))
 app.use("/api/payments", require("./routes/payments"))
+app.use("/api/coupons", require("./routes/coupons"))
 
 // Basic route
 app.get("/", (req, res) => {
