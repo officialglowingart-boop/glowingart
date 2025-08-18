@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getProducts, createProduct, updateProduct, deleteProduct } from "../../services/api"
+import { getProducts, createProduct, updateProduct, deleteProduct, getCategories } from "../../services/api"
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([])
@@ -21,6 +21,13 @@ const ProductManagement = () => {
     inStock: true,
   })
   const [images, setImages] = useState([])
+  const [categories, setCategories] = useState([
+    // fallback categories if API fails
+    "Limited Designs",
+    "One Piece",
+    "More Anime",
+    "Never Forgotten",
+  ])
 
   useEffect(() => {
     fetchProducts()
@@ -132,6 +139,25 @@ const ProductManagement = () => {
     setImages(Array.from(e.target.files))
   }
 
+  // Fetch categories when modal opens
+  useEffect(() => {
+    if (showForm) {
+      fetchCategories()
+    }
+  }, [showForm])
+
+  const fetchCategories = async () => {
+    try {
+      const response = await getCategories()
+      if (response.categories && response.categories.length > 0) {
+        setCategories(response.categories)
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error)
+      // fallback categories already set
+    }
+  }
+
   if (loading) {
     return <div>Loading products...</div>
   }
@@ -201,10 +227,13 @@ const ProductManagement = () => {
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition duration-200"
                 >
-                  <option value="Limited Designs">Limited Designs</option>
-                  <option value="One Piece">One Piece</option>
-                  <option value="More Anime">More Anime</option>
-                  <option value="Never Forgotten">Never Forgotten</option>
+                  {categories.map((cat) =>
+                    typeof cat === "string" ? (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ) : (
+                      <option key={cat._id} value={cat.name}>{cat.name}</option>
+                    )
+                  )}
                 </select>
               </div>
 
