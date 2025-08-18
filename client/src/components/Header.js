@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import TextSlider from './TextSlider'; // Add this import
 
 const Header = () => {
   const location = useLocation();
@@ -45,17 +46,8 @@ const Header = () => {
   return (
     <>
       <header className="">
-        {/* Top Banner */}
-        <div className="bg-black text-white text-center py-2">
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-xs sm:text-sm">50,000+ Happy Customers</span>
-            <div className="flex">
-              {[...Array(5)].map((_, i) => (
-                <span key={i} className="text-yellow-400 text-xs sm:text-sm">★</span>
-              ))}
-            </div>
-          </div>
-        </div>
+        {/* Replace the Top Banner with TextSlider */}
+        <TextSlider />
 
         {/* Main Header */}
         <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-4" style={{ backgroundColor: "#dfdfd8" }}>
@@ -176,7 +168,7 @@ const Header = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
               />
-                            <button
+              <button
                 type="submit"
                 className="px-6 py-2 bg-gray-800 text-white rounded-r-lg hover:bg-gray-700 transition-colors duration-200"
               >
