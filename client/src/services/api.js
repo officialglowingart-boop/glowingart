@@ -29,6 +29,8 @@ export const deleteProduct = (id) => api.delete(`/products/${id}`).then((res) =>
 // Reviews API
 export const getProductReviews = (productId) => api.get(`/reviews/product/${productId}`).then((res) => res.data)
 
+export const getAllApprovedReviews = (params = {}) => api.get("/reviews/approved", { params }).then((res) => res.data)
+
 export const createReview = (reviewData) => api.post("/reviews", reviewData).then((res) => res.data)
 
 export const getAdminReviews = (params = {}) => api.get("/reviews/admin", { params }).then((res) => res.data)
@@ -80,19 +82,21 @@ export const updateOrderStatus = (id, statusData) => api.put(`/admin/orders/${id
 
 export const getOrderDetails = (id) => api.get(`/admin/orders/${id}`).then((res) => res.data)
 
-export const confirmOrderPayment = (id, adminNotes) => 
+export const confirmOrderPayment = (id, adminNotes) =>
   api.patch(`/admin/orders/${id}/confirm-payment`, { adminNotes }).then((res) => res.data)
 
 export const submitPaymentProof = (orderId, transactionId, receiptFile) => {
   const formData = new FormData()
   formData.append("transactionId", transactionId)
   formData.append("receiptImage", receiptFile)
-  
-  return api.patch(`/orders/${orderId}/payment`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data"
-    }
-  }).then((res) => res.data)
+
+  return api
+    .patch(`/orders/${orderId}/payment`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    })
+    .then((res) => res.data)
 }
 
 export default api

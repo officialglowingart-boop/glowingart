@@ -22,6 +22,36 @@ router.get("/product/:productId", async (req, res) => {
   }
 })
 
+// Get all approved reviews (public) - for home page display
+router.get("/approved", async (req, res) => {
+  try {
+    const { limit = 50, page = 1, rating } = req.query
+    const query = { isApproved: true }
+
+    // Filter by rating if specified
+    if (rating) {
+      query.rating = Number.parseInt(rating)
+    }
+
+    const reviews = await Review.find(query)
+      .populate("product", "name images")
+      .sort({ createdAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+
+    const total = await Review.countDocuments(query)
+
+    res.json({
+      reviews,
+      totalPages: Math.ceil(total / limit),
+      currentPage: Number.parseInt(page),
+      total,
+    })
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching approved reviews", error: error.message })
+  }
+})
+
 // Create a review (public)
 router.post("/", upload.array("images", 5), async (req, res) => {
   try {
@@ -30,7 +60,7 @@ router.post("/", upload.array("images", 5), async (req, res) => {
     // Verify order exists and belongs to customer
     const order = await Order.findOne({
       orderNumber,
-      "customer.email": customerEmail,
+      "customerInfo.email": customerEmail,
       "items.product": productId,
     })
 
@@ -86,6 +116,7 @@ router.get("/admin", authenticateAdmin, async (req, res) => {
 
     if (status === "approved") query.isApproved = true
     if (status === "pending") query.isApproved = false
+    if (status === "rejected") query.isApproved = null
 
     const reviews = await Review.find(query)
       .populate("product", "name images")

@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useCart } from "../context/CartContext"
 import { getProduct, getProducts } from "../services/api"
+import ReviewsList from "../components/ReviewsList"
+import ReviewForm from "../components/ReviewForm"
 
 const ProductDetail = () => {
   const { id } = useParams()
@@ -16,6 +18,11 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [customerName, setCustomerName] = useState("")
+  const [showReviewForm, setShowReviewForm] = useState(false)
+  const [reviewFormData, setReviewFormData] = useState({
+    orderNumber: "",
+    customerEmail: "",
+  })
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -63,6 +70,17 @@ const ProductDetail = () => {
     return size || product?.sizes[0]
   }
 
+  const handleReviewSubmitted = () => {
+    setShowReviewForm(false)
+    setReviewFormData({ orderNumber: "", customerEmail: "" })
+    // Refresh the reviews list by re-rendering the ReviewsList component
+    window.location.reload()
+  }
+
+  const handleWriteReview = () => {
+    setShowReviewForm(true)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F5F3F0] flex items-center justify-center">
@@ -79,8 +97,8 @@ const ProductDetail = () => {
       <div className="min-h-screen bg-[#F5F3F0] flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600 mb-4">Product not found</p>
-          <button 
-            onClick={() => navigate("/")} 
+          <button
+            onClick={() => navigate("/")}
             className="bg-[#8B4513] text-white px-6 py-3 rounded-lg hover:bg-[#7A3F12] transition-colors"
           >
             Back to Home
@@ -98,7 +116,9 @@ const ProductDetail = () => {
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center text-sm text-gray-600">
-            <span className="cursor-pointer hover:text-[#8B4513]" onClick={() => navigate("/")}>Home</span>
+            <span className="cursor-pointer hover:text-[#8B4513]" onClick={() => navigate("/")}>
+              Home
+            </span>
             <span className="mx-2">/</span>
             <span className="cursor-pointer hover:text-[#8B4513]">Products</span>
             <span className="mx-2">/</span>
@@ -114,10 +134,13 @@ const ProductDetail = () => {
           <div className="space-y-6">
             {/* Main Product Image */}
             <div className="relative bg-white p-8 rounded-lg shadow-lg">
-              <div className="relative bg-[#8B4513] p-4 rounded-lg" style={{
-                background: 'linear-gradient(145deg, #A0522D, #8B4513)',
-                boxShadow: 'inset 0 0 20px rgba(0,0,0,0.3)'
-              }}>
+              <div
+                className="relative bg-[#8B4513] p-4 rounded-lg"
+                style={{
+                  background: "linear-gradient(145deg, #A0522D, #8B4513)",
+                  boxShadow: "inset 0 0 20px rgba(0,0,0,0.3)",
+                }}
+              >
                 <div className="bg-white p-2 rounded">
                   <div className="aspect-square bg-gray-100 rounded overflow-hidden">
                     {product.images && product.images.length > 0 ? (
@@ -144,9 +167,9 @@ const ProductDetail = () => {
                     key={index}
                     onClick={() => setSelectedImageIndex(index)}
                     className={`w-20 h-20 border-2 rounded-lg overflow-hidden cursor-pointer transition-all ${
-                      selectedImageIndex === index 
-                        ? 'border-[#8B4513] shadow-lg' 
-                        : 'border-gray-200 hover:border-gray-300'
+                      selectedImageIndex === index
+                        ? "border-[#8B4513] shadow-lg"
+                        : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
                     <img
@@ -168,18 +191,21 @@ const ProductDetail = () => {
               <div className="flex items-center gap-4">
                 <div className="flex items-center">
                   {[...Array(5)].map((_, i) => (
-                    <span key={i} className="text-yellow-400 text-lg">★</span>
+                    <span
+                      key={i}
+                      className={`text-lg ${i < (product.rating || 5) ? "text-yellow-400" : "text-gray-300"}`}
+                    >
+                      ★
+                    </span>
                   ))}
-                  <span className="ml-2 text-gray-600">(127 reviews)</span>
+                  <span className="ml-2 text-gray-600">({product.reviewCount || 0} reviews)</span>
                 </div>
               </div>
             </div>
 
             {/* Price */}
             <div className="flex items-baseline gap-4">
-              <span className="text-3xl font-bold text-gray-900">
-                Rs.{selectedPrice?.price.toLocaleString()}
-              </span>
+              <span className="text-3xl font-bold text-gray-900">Rs.{selectedPrice?.price.toLocaleString()}</span>
               {selectedPrice?.originalPrice && selectedPrice.originalPrice > selectedPrice.price && (
                 <span className="text-xl text-gray-500 line-through">
                   Rs.{selectedPrice.originalPrice.toLocaleString()}
@@ -192,13 +218,13 @@ const ProductDetail = () => {
               <h3 className="text-lg font-semibold text-gray-900">Personalization (Optional)</h3>
               <div>
                 <label className="block text-sm text-gray-700 mb-2">Your Name</label>
-                <input
+                {/* <input
                   type="text"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="Enter your name for personalization"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8B4513] focus:border-transparent"
-                />
+                /> */}
               </div>
             </div>
 
@@ -213,8 +239,8 @@ const ProductDetail = () => {
                       onClick={() => setSelectedSize(size.name)}
                       className={`px-6 py-3 border-2 rounded-lg font-medium transition-all ${
                         selectedSize === size.name
-                          ? 'border-[#8B4513] bg-[#8B4513] text-white'
-                          : 'border-gray-300 text-gray-700 hover:border-gray-400'
+                          ? "border-[#8B4513] bg-[#8B4513] text-white"
+                          : "border-gray-300 text-gray-700 hover:border-gray-400"
                       }`}
                     >
                       {size.name}
@@ -253,7 +279,7 @@ const ProductDetail = () => {
               >
                 {product.inStock ? "Add to Cart" : "Out of Stock"}
               </button>
-              
+
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div className="flex flex-col items-center p-3">
                   <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mb-2">
@@ -287,90 +313,83 @@ const ProductDetail = () => {
 
       {/* Customer Reviews Section */}
       <div className="max-w-7xl mx-auto px-4 py-16">
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">Customer Reviews</h2>
-        
-        {/* Reviews Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Review 1 */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center mr-3">
-                <span className="text-gray-600 font-semibold">JD</span>
-              </div>
-              <div>
-                <h4 className="font-semibold text-gray-900">John D.</h4>
-                <div className="flex text-yellow-400">
-                  {[...Array(5)].map((_, i) => (
-                    <span key={i}>★</span>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <p className="text-gray-700 text-sm leading-relaxed">
-              "Absolutely stunning piece! The quality exceeded my expectations and it looks perfect in my living room."
-            </p>
-          </div>
-
-          {/* Review 2 */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center mr-3">
-                <span className="text-gray-600 font-semibold">SM</span>
-              </div>
-              <div>
-                <h4 className="font-semibold text-gray-900">Sarah M.</h4>
-                <div className="flex text-yellow-400">
-                  {[...Array(5)].map((_, i) => (
-                    <span key={i}>★</span>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <p className="text-gray-700 text-sm leading-relaxed">
-              "Fast shipping and excellent packaging. The artwork is even more beautiful in person!"
-            </p>
-          </div>
-
-          {/* Review 3 */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center mr-3">
-                <span className="text-gray-600 font-semibold">MK</span>
-              </div>
-              <div>
-                <h4 className="font-semibold text-gray-900">Mike K.</h4>
-                <div className="flex text-yellow-400">
-                  {[...Array(5)].map((_, i) => (
-                    <span key={i}>★</span>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <p className="text-gray-700 text-sm leading-relaxed">
-              "Great customer service and amazing quality. Will definitely order again!"
-            </p>
-          </div>
-
-          {/* Review 4 */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center mr-3">
-                <span className="text-gray-600 font-semibold">LW</span>
-              </div>
-              <div>
-                <h4 className="font-semibold text-gray-900">Lisa W.</h4>
-                <div className="flex text-yellow-400">
-                  {[...Array(5)].map((_, i) => (
-                    <span key={i}>★</span>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <p className="text-gray-700 text-sm leading-relaxed">
-              "Perfect gift for my friend. The personalization option made it extra special!"
-            </p>
-          </div>
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-900">Customer Reviews</h2>
+          <button
+            onClick={handleWriteReview}
+            className="bg-[#8B4513] hover:bg-[#7A3F12] text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+          >
+            Write a Review
+          </button>
         </div>
+
+        {/* Review Form Modal */}
+        {showReviewForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-2xl font-bold text-gray-900">Write a Review</h3>
+                  <button
+                    onClick={() => setShowReviewForm(false)}
+                    className="text-gray-500 hover:text-gray-700 text-2xl"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                {/* Order Information Form */}
+                <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <h4 className="font-semibold text-gray-800 mb-3">Order Information Required</h4>
+                  <p className="text-sm text-gray-600 mb-4">
+                    To ensure authentic reviews, please provide your order details. This information will be verified
+                    before your review is published.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Order Number *</label>
+                      <input
+                        type="text"
+                        value={reviewFormData.orderNumber}
+                        onChange={(e) => setReviewFormData({ ...reviewFormData, orderNumber: e.target.value })}
+                        placeholder="Enter your order number"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B4513] focus:border-transparent"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+                      <input
+                        type="email"
+                        value={reviewFormData.customerEmail}
+                        onChange={(e) => setReviewFormData({ ...reviewFormData, customerEmail: e.target.value })}
+                        placeholder="Enter your email address"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B4513] focus:border-transparent"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Review Form */}
+                {reviewFormData.orderNumber && reviewFormData.customerEmail ? (
+                  <ReviewForm
+                    productId={id}
+                    orderNumber={reviewFormData.orderNumber}
+                    customerEmail={reviewFormData.customerEmail}
+                    onReviewSubmitted={handleReviewSubmitted}
+                  />
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>Please fill in your order information above to continue with your review.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <ReviewsList productId={id} />
       </div>
 
       {/* Transform Your Space Section */}
@@ -380,7 +399,7 @@ const ProductDetail = () => {
           <p className="text-white text-lg opacity-90 mb-8">
             Discover our collection of stunning artwork that will elevate your home decor
           </p>
-          <button 
+          <button
             onClick={() => navigate("/")}
             className="bg-white text-gray-900 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
           >
@@ -396,9 +415,8 @@ const ProductDetail = () => {
             <div>
               <h2 className="text-4xl font-bold text-gray-900 mb-6">Handcrafted</h2>
               <p className="text-gray-700 text-lg leading-relaxed mb-6">
-                Every piece in our collection is carefully handcrafted by skilled artisans. 
-                We use premium materials and pay attention to every detail to ensure you 
-                receive a masterpiece that will last for generations.
+                Every piece in our collection is carefully handcrafted by skilled artisans. We use premium materials and
+                pay attention to every detail to ensure you receive a masterpiece that will last for generations.
               </p>
               <div className="space-y-4">
                 <div className="flex items-center">
@@ -442,9 +460,8 @@ const ProductDetail = () => {
             <div className="text-white">
               <h2 className="text-4xl font-bold mb-6">Stunning Designs</h2>
               <p className="text-lg leading-relaxed mb-6 opacity-90">
-                Our talented designers create unique and captivating artwork that reflects 
-                contemporary trends while maintaining timeless appeal. Each design tells a 
-                story and adds character to your space.
+                Our talented designers create unique and captivating artwork that reflects contemporary trends while
+                maintaining timeless appeal. Each design tells a story and adds character to your space.
               </p>
               <div className="space-y-4">
                 <div className="flex items-center">
@@ -471,84 +488,14 @@ const ProductDetail = () => {
         </div>
       </div>
 
-      {/* More Customer Reviews */}
-      <div className="bg-[#F5F3F0] py-16">
-        <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">What Our Customers Say</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Review cards with more detailed reviews */}
-            {[
-              {
-                name: "Emily R.",
-                rating: 5,
-                review: "I ordered this for my daughter's room and she absolutely loves it! The quality is outstanding and it arrived perfectly packaged.",
-                verified: true
-              },
-              {
-                name: "David L.",
-                rating: 5,
-                review: "Exceptional service from start to finish. The artwork exceeded my expectations and looks amazing in our new home.",
-                verified: true
-              },
-              {
-                name: "Maria S.",
-                rating: 5,
-                review: "Beautiful piece that really ties our living room together. The colors are vibrant and the frame quality is excellent.",
-                verified: true
-              },
-              {
-                name: "James T.",
-                rating: 5,
-                review: "Fast shipping, great communication, and most importantly - stunning artwork! Highly recommend this seller.",
-                verified: true
-              },
-              {
-                name: "Anna K.",
-                rating: 5,
-                review: "The personalization option made this gift extra special. My mom was thrilled with the result!",
-                verified: true
-              },
-              {
-                name: "Robert M.",
-                rating: 5,
-                review: "Third purchase from this store and consistently impressed with the quality and attention to detail.",
-                verified: true
-              }
-            ].map((review, index) => (
-              <div key={index} className="bg-white p-6 rounded-lg shadow-md">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 bg-[#8B4513] rounded-full flex items-center justify-center mr-3">
-                      <span className="text-white font-semibold text-sm">{review.name.split(' ')[0][0]}{review.name.split(' ')[1][0]}</span>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">{review.name}</h4>
-                      <div className="flex text-yellow-400 text-sm">
-                        {[...Array(review.rating)].map((_, i) => (
-                          <span key={i}>★</span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  {review.verified && (
-                    <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Verified</span>
-                  )}
-                </div>
-                <p className="text-gray-700 text-sm leading-relaxed">{review.review}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* You might also like section */}
       <div className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-4">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">You might also like</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {relatedProducts.map((relatedProduct) => (
-              <div 
-                key={relatedProduct._id} 
+              <div
+                key={relatedProduct._id}
                 className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
                 onClick={() => navigate(`/product/${relatedProduct._id}`)}
               >
@@ -560,20 +507,23 @@ const ProductDetail = () => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      No Image
-                    </div>
+                    <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
                   )}
                 </div>
                 <div className="p-4">
                   <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{relatedProduct.name}</h3>
                   <div className="flex items-center justify-between">
                     <span className="text-lg font-bold text-[#8B4513]">
-                      Rs.{relatedProduct.sizes?.[0]?.price?.toLocaleString() || 'N/A'}
+                      Rs.{relatedProduct.sizes?.[0]?.price?.toLocaleString() || "N/A"}
                     </span>
                     <div className="flex text-yellow-400 text-sm">
                       {[...Array(5)].map((_, i) => (
-                        <span key={i}>★</span>
+                        <span
+                          key={i}
+                          className={i < (relatedProduct.rating || 5) ? "text-yellow-400" : "text-gray-300"}
+                        >
+                          ★
+                        </span>
                       ))}
                     </div>
                   </div>
@@ -588,4 +538,3 @@ const ProductDetail = () => {
 }
 
 export default ProductDetail
- 
