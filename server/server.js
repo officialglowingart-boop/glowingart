@@ -8,23 +8,21 @@ dotenv.config()
 
 const app = express()
 
-// Middleware
-app.use(cors({
+// Configure CORS to allow requests from your frontend domain
+const corsOptions = {
   origin: [
-    "http://localhost:3000",
-    "https://glowing-art.com", 
-    "https://glowingart-official.vercel.app"
+    "https://www.glowing-art.com",
+    "https://glowing-art.com",
+    "http://localhost:3000" // For local development
   ],
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
-  allowedHeaders: [
-    "Content-Type", 
-    "Authorization", 
-    "X-Requested-With",
-    "Accept",
-    "Origin"
-  ],
-  credentials: true
-}))
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+};
+
+app.use(cors(corsOptions));
+
+// Middleware
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
