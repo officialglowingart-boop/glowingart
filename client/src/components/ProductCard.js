@@ -16,10 +16,26 @@ const ProductCard = ({ product }) => {
     reviewCount = 0
   } = product || {};
 
-  // Get the lowest price from sizes array
-  const getLowestPrice = () => {
+  // Get the minimum (current) price across sizes
+  const getMinPrice = () => {
     if (!sizes || sizes.length === 0) return 0;
-    return Math.min(...sizes.map(size => size.price || 0));
+    const nums = sizes
+      .map(s => typeof s.price === 'number' ? s.price : Number(s.price))
+      .filter(v => Number.isFinite(v));
+    return nums.length ? Math.min(...nums) : 0;
+  };
+
+  // Get the maximum price across sizes (prefer originalPrice when present)
+  const getMaxPrice = () => {
+    if (!sizes || sizes.length === 0) return 0;
+    const nums = [];
+    sizes.forEach(s => {
+      const price = typeof s.price === 'number' ? s.price : Number(s.price);
+      const original = typeof s.originalPrice === 'number' ? s.originalPrice : Number(s.originalPrice);
+      if (Number.isFinite(price)) nums.push(price);
+      if (Number.isFinite(original)) nums.push(original);
+    });
+    return nums.length ? Math.max(...nums) : 0;
   };
 
   // Get image URL - handle both string and object formats
@@ -106,9 +122,23 @@ const ProductCard = ({ product }) => {
           {/* Price */}
           <div className="flex items-center justify-between">
             <div className="flex flex-col">
-              <span className="text-lg sm:text-xl font-bold text-gray-900 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
-                Rs.{getLowestPrice().toLocaleString()}
-              </span>
+              {(() => {
+                const minPrice = getMinPrice();
+                const maxPrice = getMaxPrice();
+                const showRange = Number.isFinite(minPrice) && Number.isFinite(maxPrice) && maxPrice > minPrice;
+                return (
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-lg sm:text-xl font-bold text-gray-900 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
+                      Rs.{minPrice.toLocaleString()}
+                    </span>
+                    {showRange && (
+                      <span className="text-sm text-gray-500 line-through font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
+                        Rs.{maxPrice.toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
               {sizes.length > 1 && (
                 <span className="text-xs text-gray-500 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
                   Starting from
