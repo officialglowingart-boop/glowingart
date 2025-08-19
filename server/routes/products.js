@@ -5,40 +5,152 @@ const { upload } = require("../middleware/upload")
 
 const router = express.Router()
 
+// Helper to escape user input for safe regex usage
+const escapeRegex = (str = "") => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+// Normalize spaces: collapse multiple spaces and trim
+const normalizeSpaces = (s = "") => s.replace(/\s+/g, " ").trim()
+// Convert a string to a regex pattern that is tolerant to whitespace: spaces -> \s*
+const toFlexibleSpacePattern = (s = "") => escapeRegex(s).replace(/\s+/g, "\\s*")
+
+// Build $or search across fields using a regex term (already escaped / prepared)
+const buildOr = (term) => [
+  { name: { $regex: term, $options: "i" } },
+  { description: { $regex: term, $options: "i" } },
+  { tags: { $in: [new RegExp(term, "i")] } },
+]
+
 // Get all products (public)
 router.get("/", async (req, res) => {
   try {
     const { category, featured, search, page = 1, limit = 12 } = req.query
 
-    const query = {}
+    const pageNum = parseInt(page, 10) || 1
+    const limitNum = parseInt(limit, 10) || 12
 
+    // Base filters (category, featured)
+    const baseFilter = {}
     if (category) {
-      query.category = category
+      baseFilter.category = category
     }
-
     if (featured === "true") {
-      query.featured = true
+      baseFilter.featured = true
     }
 
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
-        { tags: { $in: [new RegExp(search, "i")] } },
-      ]
+    // Advanced search behavior
+    if (typeof search === "string" && search.trim().length > 0) {
+      const raw = search.trim()
+      const normalized = normalizeSpaces(raw)
+
+      // 1) Exact match by full name first
+      const exactPattern = `^${toFlexibleSpacePattern(normalized)}$`
+      const exactFilter = {
+        ...baseFilter,
+        name: { $regex: exactPattern, $options: "i" },
+      }
+
+      const exactTotal = await Product.countDocuments(exactFilter)
+      if (exactTotal > 0) {
+        const exactProducts = await Product.find(exactFilter)
+          .sort({ createdAt: -1 })
+          .limit(limitNum)
+          .skip((pageNum - 1) * limitNum)
+
+        return res.json({
+          products: exactProducts,
+          totalPages: Math.ceil(exactTotal / limitNum),
+          currentPage: pageNum,
+          total: exactTotal,
+          appliedSearch: normalized,
+          matchType: "exact",
+        })
+      }
+
+      // 2) Try the full query as-is (partial/fuzzy match across fields) before trimming
+      const fullFlexible = toFlexibleSpacePattern(normalized)
+      const fullFilter = { ...baseFilter, $or: buildOr(fullFlexible) }
+      const fullTotal = await Product.countDocuments(fullFilter)
+      if (fullTotal > 0) {
+        const fullProducts = await Product.find(fullFilter)
+          .sort({ createdAt: -1 })
+          .limit(limitNum)
+          .skip((pageNum - 1) * limitNum)
+
+        return res.json({
+          products: fullProducts,
+          totalPages: Math.ceil(fullTotal / limitNum),
+          currentPage: pageNum,
+          total: fullTotal,
+          appliedSearch: normalized,
+          matchType: "full",
+        })
+      }
+
+  // 3) Progressive trimming from the end (words first, then letters)
+  const candidates = []
+  const words = normalized.split(/\s+/).filter(Boolean)
+
+      // Remove words from the end step-by-step
+      for (let k = words.length - 1; k >= 1; k--) {
+        const term = words.slice(0, k).join(" ")
+        if (term && !candidates.includes(term)) candidates.push(term)
+      }
+
+      // If still nothing, remove trailing letters step-by-step (down to length >= 2)
+      for (let i = normalized.length - 1; i >= 2; i--) {
+        const term = normalized.slice(0, i).trim()
+        if (term && !candidates.includes(term)) candidates.push(term)
+      }
+
+      let chosen = null
+      for (const term of candidates) {
+        const flexible = toFlexibleSpacePattern(term)
+        const filter = { ...baseFilter, $or: buildOr(flexible) }
+        const cnt = await Product.countDocuments(filter)
+        if (cnt > 0) {
+          chosen = { term, count: cnt, filter }
+          break
+        }
+      }
+
+      if (chosen) {
+        const products = await Product.find(chosen.filter)
+          .sort({ createdAt: -1 })
+          .limit(limitNum)
+          .skip((pageNum - 1) * limitNum)
+
+        return res.json({
+          products,
+          totalPages: Math.ceil(chosen.count / limitNum),
+          currentPage: pageNum,
+          total: chosen.count,
+          appliedSearch: chosen.term,
+          matchType: "trim",
+        })
+      }
+
+      // No matches at all for any trimmed variant
+      return res.json({
+        products: [],
+        totalPages: 0,
+        currentPage: pageNum,
+        total: 0,
+  appliedSearch: normalized,
+        matchType: "none",
+      })
     }
 
-    const products = await Product.find(query)
+    // No search: default listing
+    const products = await Product.find(baseFilter)
       .sort({ createdAt: -1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
+      .limit(limitNum)
+      .skip((pageNum - 1) * limitNum)
 
-    const total = await Product.countDocuments(query)
+    const total = await Product.countDocuments(baseFilter)
 
     res.json({
       products,
-      totalPages: Math.ceil(total / limit),
-      currentPage: page,
+      totalPages: Math.ceil(total / limitNum),
+      currentPage: pageNum,
       total,
     })
   } catch (error) {

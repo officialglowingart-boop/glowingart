@@ -109,6 +109,7 @@ import CommonQuestions from "./pages/CommonQuestions"
 import Contact from "./pages/Contact"
 import Category from "./pages/Category"
 import ProductDetail from "./pages/ProductDetail"
+import Products from "./pages/Products"
 import Payment from "./pages/Payment"
 import PaymentDetails from "./pages/PaymentDetails"
 import Checkout from "./pages/Checkout"
@@ -149,6 +150,7 @@ function App() {
                       <Routes>
                         <Route path="/" element={<Home />} />
                         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                        <Route path="/products" element={<Products />} />
                         <Route path="/track-order" element={<OrderTracking />} />
                         <Route path="/track-order/:orderNumber" element={<OrderTracking />} />
                         <Route path="/order-tracking" element={<OrderTracking />} />

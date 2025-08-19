@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import TextSlider from './TextSlider'; // Add this import
@@ -13,6 +13,10 @@ const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const searchAreaRef = useRef(null);
+  const searchInputRef = useRef(null);
+  const mobileSearchRef = useRef(null);
+  
 
   const { cartItems, toggleCart, removeFromCart, updateQuantity } = useCart() || {};
   const cartItemCount = cartItems?.reduce((total, item) => total + (item.quantity || 1), 0) || 0;
@@ -25,8 +29,9 @@ const Header = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+    const latest = (searchInputRef.current?.value ?? searchQuery).trim();
+    if (latest) {
+      navigate(`/products?search=${encodeURIComponent(latest)}`);
       setSearchQuery('');
       setIsSearchOpen(false);
     }
@@ -43,50 +48,117 @@ const Header = () => {
     return () => window.removeEventListener('openCart', handleOpenCart);
   }, []);
 
+  // Auto-focus the search input when opened
+  useEffect(() => {
+    if (isSearchOpen) {
+      // slight delay to ensure element is mounted
+      setTimeout(() => searchInputRef.current?.focus(), 0);
+    }
+  }, [isSearchOpen]);
+
+  // Close search when clicking outside (desktop + mobile)
+  useEffect(() => {
+    if (!isSearchOpen) return;
+    const onDocMouseDown = (e) => {
+      const insideDesktop = !!(searchAreaRef.current && searchAreaRef.current.contains(e.target));
+      const insideMobile = !!(mobileSearchRef.current && mobileSearchRef.current.contains(e.target));
+      if (!insideDesktop && !insideMobile) setIsSearchOpen(false);
+    };
+    document.addEventListener('mousedown', onDocMouseDown);
+    document.addEventListener('touchstart', onDocMouseDown, { passive: true });
+    return () => {
+      document.removeEventListener('mousedown', onDocMouseDown);
+      document.removeEventListener('touchstart', onDocMouseDown);
+    };
+  }, [isSearchOpen]);
+
+  // no header height needed; mobile search now flows with page
+
   return (
     <>
-      <header className="">
+  <header className="" style={{ backgroundColor: "#dfdfd8" }}>
         {/* Replace the Top Banner with TextSlider */}
         <TextSlider />
 
         {/* Main Header */}
         <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-4" style={{ backgroundColor: "#dfdfd8" }}>
-          <div className="flex items-center justify-between">
-            {/* Mobile Menu Button */}
-            <button
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors md:hidden"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2">
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </svg>
-            </button>
+          <div className="flex items-center justify-between w-full">
+            {/* Left: Mobile menu + search */}
+            <div className="flex items-center flex-1 min-w-0">
+              {/* Mobile Menu Button */}
+              <button
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors md:hidden"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2">
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+              </button>
+              {/* Search Icon + inline desktop search */}
+              <div className="hidden md:flex items-center" ref={searchAreaRef}>
+                {!isSearchOpen && (
+                  <button
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    onClick={() => setIsSearchOpen(true)}
+                    aria-label="Open search"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2">
+                      <circle cx="11" cy="11" r="8" />
+                      <path d="m21 21-4.35-4.35" />
+                    </svg>
+                  </button>
+                )}
+                {isSearchOpen && (
+                  <form onSubmit={handleSearch} className="ml-2 flex items-center">
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      placeholder="Search products..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-64 px-3 py-2  rounded-l-lg focus:outline-none  "
+                    />
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-gray-800 text-white rounded-r-lg hover:bg-gray-700 transition-colors duration-200"
+                    >
+                      Search
+                    </button>
+                  </form>
+                )}
+              </div>
+            </div>
 
-            {/* Search Icon */}
-            <button
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors hidden md:block"
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2">
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.35-4.35" />
-              </svg>
-            </button>
+            {/* Center: Logo */}
+            <div className="flex-1 flex justify-center">
+              <Link to="/" className="no-underline flex-shrink-0">
+                <img
+                  src="https://res.cloudinary.com/dnhc1pquv/image/upload/v1755152549/glowing_art_wfvdht.png"
+                  alt="Glowing Gallery"
+                  className="h-12 sm:h-16 md:h-20"
+                />
+              </Link>
+            </div>
 
-            {/* Logo */}
-            <Link to="/" className="no-underline flex-shrink-0">
-              <img
-                src="https://res.cloudinary.com/dnhc1pquv/image/upload/v1755152549/glowing_art_wfvdht.png"
-                alt="Glowing Gallery"
-                className="h-12 sm:h-16 md:h-20"
-              />
-            </Link>
-
-            {/* Right Icons */}
-            <div className="flex items-center gap-2 sm:gap-4">
+            {/* Right: Currency + Cart */}
+            <div className="flex items-center gap-2 sm:gap-4 flex-1 justify-end">
               <span className="text-xs sm:text-sm text-gray-600 hidden sm:block">PAK | Rs</span>
+
+              {/* Mobile search icon next to cart (hidden when open) */}
+              {!isSearchOpen && (
+                <button
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors md:hidden"
+                  aria-label="Open search"
+                  onClick={() => setIsSearchOpen(true)}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.35-4.35" />
+                  </svg>
+                </button>
+              )}
 
               {/* Cart Button */}
               <button
@@ -156,21 +228,26 @@ const Header = () => {
         )}
       </header>
 
-      {/* Search Box */}
+    {/* Search Box - mobile below navbar (flows with page) */}
       {isSearchOpen && (
-        <div className="absolute top-24 left-0 right-0 bg-white shadow z-50 border-b">
-          <div className="max-w-7xl mx-auto px-4 py-4">
+        <div
+          ref={mobileSearchRef}
+      className="md:hidden"
+      style={{ backgroundColor: "#dfdfd8" }}
+        >
+      <div className="max-w-7xl mx-auto px-4 py-2">
             <form onSubmit={handleSearch} className="flex">
               <input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none"
               />
               <button
                 type="submit"
-                className="px-6 py-2 bg-gray-800 text-white rounded-r-lg hover:bg-gray-700 transition-colors duration-200"
+                className="px-6 py-2 bg-gray-800 text-white rounded-r-lg hover:bg-gray-700 transition-colors duration-200 "
               >
                 Search
               </button>
@@ -194,8 +271,7 @@ const Header = () => {
                 <h2 className="text-lg font-semibold text-gray-800">Shopping Cart ({cartItemCount})</h2>
                 <button
                   onClick={() => setIsCartOpen(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
+                  className="text-gray-500 hover:text-gray-700">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
