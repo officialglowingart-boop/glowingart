@@ -122,7 +122,7 @@ const ProductCard = ({ product }) => {
               const showRange = Number.isFinite(minPrice) && Number.isFinite(maxPrice) && maxPrice > minPrice;
               return (
                   <div className="flex items-baseline gap-1 sm:gap-2">
-                    <span className="text-lg sm:text-xl font-extrabold text-red-600 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
+                    <span className="text-lg sm:text-xl font-extrabold text-black font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
                       Rs.{minPrice.toLocaleString()}
                     </span>
                     {showRange && (
