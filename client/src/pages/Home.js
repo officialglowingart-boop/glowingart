@@ -16,6 +16,9 @@ const Home = () => {
   const [reviewsToShow, setReviewsToShow] = useState(6)
   const [selectedRating, setSelectedRating] = useState(null)
   const [reviewsLoading, setReviewsLoading] = useState(false)
+  const [reviewsPage, setReviewsPage] = useState(1)
+  const [totalReviewsAll, setTotalReviewsAll] = useState(0) // total count from backend for "All"
+  const REVIEWS_LIMIT = 50 // backend page size for approved reviews
 
   useEffect(() => {
     const fetchInitial = async () => {
@@ -40,14 +43,20 @@ const Home = () => {
     const fetchReviews = async () => {
       try {
         setReviewsLoading(true)
-        const response = await getAllApprovedReviews()
-        setAllReviews(response.reviews || [])
-        setDisplayedReviews((response.reviews || []).slice(0, reviewsToShow))
+        // fetch first page with explicit limit to also get accurate total
+        const response = await getAllApprovedReviews({ page: 1, limit: REVIEWS_LIMIT })
+        const firstPage = response.reviews || []
+        setTotalReviewsAll(Number(response.total) || firstPage.length)
+        setAllReviews(firstPage)
+        setDisplayedReviews(firstPage.slice(0, reviewsToShow))
+        setReviewsPage(1)
       } catch (error) {
         console.error("Error fetching reviews:", error)
         // Fallback to empty array if API fails
         setAllReviews([])
         setDisplayedReviews([])
+        setTotalReviewsAll(0)
+        setReviewsPage(1)
       } finally {
         setReviewsLoading(false)
       }
@@ -105,12 +114,37 @@ const Home = () => {
     )
   }
 
-  const handleViewMoreReviews = () => {
-    setReviewsLoading(true)
-    setTimeout(() => {
-      setReviewsToShow((prev) => prev + 20)
+  const handleViewMoreReviews = async () => {
+    try {
+      setReviewsLoading(true)
+      const increment = 20
+
+      // If we already have enough reviews loaded locally, just increase the slice
+      if (displayedReviews.length + increment <= allReviews.length) {
+        setReviewsToShow((prev) => prev + increment)
+        return
+      }
+
+      // If "All" tab is active and there are more reviews on the server, fetch next page and append
+      if (selectedRating === null && allReviews.length < totalReviewsAll) {
+        const nextPage = reviewsPage + 1
+        const response = await getAllApprovedReviews({ page: nextPage, limit: REVIEWS_LIMIT })
+        const nextBatch = response.reviews || []
+        const combined = [...allReviews, ...nextBatch]
+        setAllReviews(combined)
+        setReviewsPage(nextPage)
+        // increase how many we show now
+        setReviewsToShow((prev) => prev + increment)
+        return
+      }
+
+      // Default fallback: just increase the slice (helps when a rating filter is applied)
+      setReviewsToShow((prev) => prev + increment)
+    } catch (e) {
+      console.error("Error loading more reviews:", e)
+    } finally {
       setReviewsLoading(false)
-    }, 500)
+    }
   }
 
   const handleRatingFilter = (rating) => {
@@ -126,7 +160,8 @@ const Home = () => {
     if (selectedRating) {
       return allReviews.filter((review) => review.rating === selectedRating).length
     }
-    return allReviews.length
+    // For "All", show true backend total
+    return totalReviewsAll
   }
 
   const hasMoreReviews = () => {
@@ -203,7 +238,7 @@ const Home = () => {
         <div className="text-center mb-6 sm:mb-8">
           <div className="flex items-center justify-center mb-2">
             <StarRating rating={5} />
-            <span className="ml-2 text-lg font-medium text-gray-800 font-serif">{allReviews.length} Reviews</span>
+            <span className="ml-2 text-lg font-medium text-gray-800 font-serif">{totalReviewsAll} Reviews</span>
             <button className="ml-2 p-1">
               <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -222,7 +257,7 @@ const Home = () => {
                 : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
             }`}
           >
-            All ({allReviews.length})
+            All ({totalReviewsAll})
           </button>
           {[5, 4, 3, 2, 1].map((rating) => (
             <button
