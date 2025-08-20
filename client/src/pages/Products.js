@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { useLocation } from "react-router-dom"
 import ProductCard from "../components/ProductCard"
-import { getProducts } from "../services/api"
+import { getProducts, getCategories } from "../services/api"
 
 const useQuery = () => new URLSearchParams(useLocation().search)
 
@@ -19,8 +19,27 @@ const Products = () => {
       setLoading(true)
       setError(null)
       try {
-        const data = await getProducts({ search })
-        setProducts(data.products || [])
+        const [data, catData] = await Promise.all([
+          getProducts({ search }),
+          getCategories(),
+        ])
+        const cats = (catData && catData.categories) || []
+        const norm = (s = "") => s.toString().toLowerCase().replace(/\s+/g, " ").trim().replace(/[^a-z0-9 ]/gi, "")
+        const orderMap = new Map(
+          cats.map((c, idx) => {
+            const label = typeof c === "string" ? c : c?.name
+            const order = typeof c === "string" ? idx : c?.sortOrder ?? idx
+            return [norm(label || ""), order]
+          })
+        )
+        const ordered = (data.products || []).slice().sort((a, b) => {
+          const pa = orderMap.has(norm(a.category)) ? orderMap.get(norm(a.category)) : Number.MAX_SAFE_INTEGER
+          const pb = orderMap.has(norm(b.category)) ? orderMap.get(norm(b.category)) : Number.MAX_SAFE_INTEGER
+          if (pa !== pb) return pa - pb
+          if (a.featured !== b.featured) return a.featured ? -1 : 1
+          return new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+        })
+        setProducts(ordered)
         setMeta({
           appliedSearch: data.appliedSearch ?? search,
           matchType: data.matchType ?? (search ? "regex" : null),

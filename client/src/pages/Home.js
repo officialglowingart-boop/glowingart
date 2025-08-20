@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import ProductCard from "../components/ProductCard"
-import { getProducts, getAllApprovedReviews } from "../services/api"
+import { getProducts, getAllApprovedReviews, getCategories } from "../services/api"
 
 const Home = () => {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [categories, setCategories] = useState([])
 
   const [allReviews, setAllReviews] = useState([])
   const [displayedReviews, setDisplayedReviews] = useState([])
@@ -17,19 +18,22 @@ const Home = () => {
   const [reviewsLoading, setReviewsLoading] = useState(false)
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchInitial = async () => {
       try {
-        const data = await getProducts()
-        setProducts(data.products || [])
+        const [prodData, catData] = await Promise.all([
+          getProducts(),
+          getCategories(), // public: already returns active categories sorted by sortOrder
+        ])
+        setProducts(prodData.products || [])
+        setCategories((catData && catData.categories) || [])
       } catch (err) {
         setError("Failed to load products")
-        console.error("Error fetching products:", err)
+        console.error("Error fetching home data:", err)
       } finally {
         setLoading(false)
       }
     }
-
-    fetchProducts()
+    fetchInitial()
   }, [])
 
   useEffect(() => {
@@ -65,14 +69,28 @@ const Home = () => {
 
   const groupProductsByCategory = (products) => {
     const grouped = {}
+    const norm = (s = "") => s.toString().toLowerCase().replace(/\s+/g, " ").trim().replace(/[^a-z0-9 ]/gi, "")
+    const labelMap = {}
+
+    // Build a quick label preference map from categories list
+    const catEntries = categories.map((c) => ({
+      label: typeof c === "string" ? c : c?.name,
+      key: norm(typeof c === "string" ? c : c?.name || ""),
+    }))
+
     products.forEach((product) => {
-      const category = product.category || "Other"
-      if (!grouped[category]) {
-        grouped[category] = []
+      const raw = product.category || "Other"
+      const key = norm(raw)
+      if (!grouped[key]) grouped[key] = []
+      grouped[key].push(product)
+
+      // Prefer label from categories list if available, else keep first seen raw
+      if (!labelMap[key]) {
+        const fromCat = catEntries.find((e) => e.key === key)
+        labelMap[key] = fromCat?.label || raw
       }
-      grouped[category].push(product)
     })
-    return grouped
+    return { grouped, labelMap, norm }
   }
 
   const StarRating = ({ rating }) => {
@@ -131,24 +149,32 @@ const Home = () => {
     )
   }
 
-  const groupedProducts = groupProductsByCategory(products)
+  const { grouped, labelMap, norm } = groupProductsByCategory(products)
+  // Determine ordered category keys from categories (already sorted by sortOrder), then append leftover keys
+  const orderedKeys = categories
+    .map((c) => (typeof c === "string" ? c : c?.name))
+    .filter(Boolean)
+    .map((name) => norm(name))
+  const leftovers = Object.keys(grouped).filter((k) => !orderedKeys.includes(k))
+  const finalKeys = [...orderedKeys, ...leftovers]
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#dfdfd8" }}>
       {/* Products by Category */}
       <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 pb-8 sm:pb-12 md:pb-16">
-        {Object.entries(groupedProducts).map(([category, categoryProducts]) => (
-          <div key={category} className="mb-8 sm:mb-12 md:mb-16">
+        {finalKeys.map((key) => (
+          grouped[key] && (
+          <div key={key} className="mb-8 sm:mb-12 md:mb-16">
             {/* Category Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 md:mb-8">
               <h2
                 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-2 sm:mb-0 font-serif"
                 style={{ fontFamily: 'Times, "Times New Roman", serif' }}
               >
-                {category}
+                {labelMap[key]}
               </h2>
               <Link
-                to={`/category/${category.toLowerCase()}`}
+                to={`/category/${encodeURIComponent(labelMap[key].toLowerCase())}`}
                 className="text-sm sm:text-base text-gray-600 hover:text-gray-800 font-medium font-serif self-start sm:self-auto"
                 style={{ fontFamily: 'Times, "Times New Roman", serif' }}
               >
@@ -158,13 +184,14 @@ const Home = () => {
 
             {/* Products Grid - 2 columns on mobile, 3-4 on larger screens */}
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
-              {categoryProducts.slice(0, 8).map((product) => (
+              {grouped[key].slice(0, 8).map((product) => (
                 <div key={product._id} className="w-full">
                   <ProductCard product={product} />
                 </div>
               ))}
             </div>
           </div>
+          )
         ))}
       </div>
 

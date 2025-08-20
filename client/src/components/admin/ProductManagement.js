@@ -30,13 +30,39 @@ const ProductManagement = () => {
   ])
 
   useEffect(() => {
-    fetchProducts()
+  // Load categories first for priority sorting, then products
+  fetchCategories()
+  fetchProducts()
   }, [])
+
+  const sortByCategoryPriority = (items = [], cats = []) => {
+    // Build a priority map: lower sortOrder => higher priority
+    const map = new Map()
+    cats.forEach((c, idx) => {
+      if (typeof c === "string") {
+        map.set(c, idx)
+      } else if (c && c.name) {
+        const order = typeof c.sortOrder === "number" ? c.sortOrder : idx
+        map.set(c.name, order)
+      }
+    })
+
+    const withDefault = (name) => (map.has(name) ? map.get(name) : Number.MAX_SAFE_INTEGER)
+
+    return [...items].sort((a, b) => {
+      const pa = withDefault(a.category)
+      const pb = withDefault(b.category)
+      if (pa !== pb) return pa - pb
+      // Secondary: featured first, then newest
+      if (a.featured !== b.featured) return a.featured ? -1 : 1
+      return new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+    })
+  }
 
   const fetchProducts = async () => {
     try {
       const response = await getProducts()
-      setProducts(response.products)
+      setProducts(sortByCategoryPriority(response.products, categories))
     } catch (error) {
       console.error("Error fetching products:", error)
     } finally {
@@ -149,12 +175,20 @@ const ProductManagement = () => {
     setImages(Array.from(e.target.files))
   }
 
-  // Fetch categories when modal opens
+  // Fetch categories when modal opens (to refresh), and also resort products when categories change
   useEffect(() => {
     if (showForm) {
       fetchCategories()
     }
   }, [showForm])
+
+  useEffect(() => {
+    // Resort whenever categories update
+    if (products && products.length > 0) {
+      setProducts((prev) => sortByCategoryPriority(prev, categories))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories])
 
   const fetchCategories = async () => {
     try {
