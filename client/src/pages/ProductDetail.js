@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { FiAlertTriangle, FiTruck, FiCheckCircle, FiClock, FiX } from "react-icons/fi"
+import { FaLeaf } from "react-icons/fa"
 import { useParams, useNavigate } from "react-router-dom"
 import { useCart } from "../context/CartContext"
 import { getProduct, getProducts } from "../services/api"
@@ -72,7 +74,6 @@ const ProductDetail = () => {
   }
 
   const handleReviewSubmitted = () => {
-    setShowReviewForm(false)
     setReviewFormData({ orderNumber: "", customerEmail: "" })
     // Refresh the reviews list by re-rendering the ReviewsList component
     window.location.reload()
@@ -81,6 +82,21 @@ const ProductDetail = () => {
   const handleWriteReview = () => {
     setShowReviewForm(true)
   }
+
+  // Improve modal UX: close on ESC, lock background scroll when open
+  useEffect(() => {
+    if (!showReviewForm) return
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") setShowReviewForm(false)
+    }
+    document.addEventListener("keydown", onKeyDown)
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.removeEventListener("keydown", onKeyDown)
+      document.body.style.overflow = originalOverflow
+    }
+  }, [showReviewForm])
 
   if (loading) {
     return (
@@ -129,6 +145,119 @@ const ProductDetail = () => {
             <span className="text-[#8B4513] font-medium truncate max-w-[60%]">{product.name}</span>
           </nav>
         </div>
+          {/* Global Review Form Modal */}
+          {showReviewForm && (
+            <div
+              className="fixed inset-0 z-50"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="review-modal-title"
+            >
+              {/* Overlay */}
+              <div
+                className="absolute inset-0 bg-black/50"
+                onClick={() => setShowReviewForm(false)}
+              />
+              {/* Panel */}
+              <div className="absolute inset-0 flex items-center justify-center p-4">
+                <div
+                  className="bg-white w-full h-full rounded-none md:h-auto md:max-h-[90vh] md:rounded-xl md:max-w-2xl overflow-hidden shadow-xl"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Header */}
+                  <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 md:px-6 border-b bg-white">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+                        {product.images?.[0]?.url ? (
+                          <img src={product.images[0].url} alt={product.name} className="w-full h-full object-cover" />
+                        ) : null}
+                      </div>
+                      <div className="min-w-0">
+                        <h3 id="review-modal-title" className="text-base md:text-lg font-semibold text-gray-900 truncate">
+                          Write a review
+                        </h3>
+                        <p className="text-xs text-gray-500 truncate">{product.name}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowReviewForm(false)}
+                      className="inline-flex items-center justify-center w-9 h-9 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                      aria-label="Close"
+                    >
+                      <FiX className="text-xl" />
+                    </button>
+                  </div>
+
+                  {/* Body */}
+                  <div className="p-4 md:p-6 overflow-y-auto max-h-full">
+                    {/* Stepper */}
+                    <div className="flex items-center gap-3 text-sm mb-4 text-gray-600">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#8B4513] text-white text-xs font-bold">1</span>
+                        <span className="font-medium">Order Info</span>
+                      </div>
+                      <span className="text-gray-300">→</span>
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${
+                          reviewFormData.orderNumber && reviewFormData.customerEmail ? "bg-[#8B4513] text-white" : "bg-gray-200 text-gray-600"
+                        } text-xs font-bold`}>2</span>
+                        <span className="font-medium">Write Review</span>
+                      </div>
+                    </div>
+
+                    {/* Order Information Form */}
+                    <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                      <h4 className="font-semibold text-gray-800 mb-3">Order information required</h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        Please provide details to verify your purchase. We only use this to validate genuine reviews.
+                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Order Number *</label>
+                          <input
+                            type="text"
+                            value={reviewFormData.orderNumber}
+                            onChange={(e) => setReviewFormData({ ...reviewFormData, orderNumber: e.target.value })}
+                            placeholder="e.g. GA-123456"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B4513] focus:border-transparent"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+                          <input
+                            type="email"
+                            value={reviewFormData.customerEmail}
+                            onChange={(e) => setReviewFormData({ ...reviewFormData, customerEmail: e.target.value })}
+                            placeholder="you@example.com"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B4513] focus:border-transparent"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Review Form */}
+                    {reviewFormData.orderNumber && reviewFormData.customerEmail ? (
+                      <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-5">
+                        <ReviewForm
+                          productId={id}
+                          orderNumber={reviewFormData.orderNumber}
+                          customerEmail={reviewFormData.customerEmail}
+                          onReviewSubmitted={handleReviewSubmitted}
+                        />
+                      </div>
+                    ) : (
+                      <div className="text-center py-10 text-gray-500 border border-dashed border-gray-300 rounded-lg">
+                        <p>Fill in your order number and email above to continue to the review form.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
       </div>
 
       {/* Main Product Section */}
@@ -218,6 +347,15 @@ const ProductDetail = () => {
                 )}
               </div>
             </div>
+            {/* Add Review button under gallery (opens modal) - desktop only */}
+            <div className="mt-4 hidden lg:flex justify-end">
+              <button
+                onClick={handleWriteReview}
+                className="inline-flex items-center gap-2 border border-[#8B4513] text-white bg-[#8B4513] hover:bg-[#7A3F12] px-4 py-2 rounded-lg text-sm font-semibold"
+              >
+                + Write Review
+              </button>
+            </div>
             {/* Insert review summary below gallery on desktop only */}
             <div className="mt-8 hidden lg:block">
               <ReviewSummary productId={id} />
@@ -227,7 +365,7 @@ const ProductDetail = () => {
           {/* Right - Summary / Buy Panel */}
           <aside className="lg:col-span-5">
             <div className="lg:sticky lg:top-6 space-y-6">
-              <div className=" rounded-2xl shadow-sm border border-gray-200 p-6">
+              <div className=" rounded-2xl  p-6">
                  {product.inStock ? (
                     <span className="inline-flex items-center px-4 py-2 rounded-md bg-emerald-50 text-emerald-700 text-xs font-medium">In stock</span>
                   ) : (
@@ -264,57 +402,75 @@ const ProductDetail = () => {
                  
                 </div>
 
-                {/* Size, Quantity + Right-side notes */}
-                <div className="mt-6 grid grid-cols-2 gap-6 items-start">
+                {/* Promo highlights below price */}
+                <div className="mt-3 space-y-1 text-sm text-gray-700">
+                  <p className="flex items-center gap-2 font-medium text-amber-700">
+                    <FiAlertTriangle className="shrink-0" />
+                    Almost Sold Out!
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <FiTruck className="shrink-0" />
+                    Free Nationwide Shipping
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <FaLeaf className="shrink-0" />
+                    Eco-Friendly Production
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <FiCheckCircle className="shrink-0" />
+                    Premium Quality Guaranteed
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <FiClock className="shrink-0" />
+                    Order Now Before It's Gone!
+                  </p>
+                </div>
+
+                {/* Size and Quantity - inline across all devices */}
+                <div className="mt-6">
                   <div>
-                    {/* Size Selection */}
-                    {product.sizes && product.sizes.length > 0 && (
+                    <div className="flex items-center justify-between gap-6">
                       <div>
-                        <h3 className="text-sm font-medium text-gray-900 mb-2">Size</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {product.sizes.map((size) => (
-                            <button
-                              key={size.name}
-                              onClick={() => setSelectedSize(size.name)}
-                              className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
-                                selectedSize === size.name
-                                  ? "border-[#8B4513] bg-[#8B4513] text-white"
-                                  : "border-gray-300 text-gray-700 hover:border-gray-400"
-                              }`}
-                            >
-                              {size.name}
-                            </button>
-                          ))}
+                        <h3 className="text-sm font-medium text-gray-900 mb-2">Quantity</h3>
+                        <div className="inline-flex items-center border border-gray-300 rounded-lg overflow-hidden">
+                          <button
+                            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                            className="w-10 h-10 flex items-center justify-center text-lg hover:bg-gray-50"
+                            aria-label="Decrease quantity"
+                          >
+                            −
+                          </button>
+                          <span className="w-12 text-center text-base font-semibold">{quantity}</span>
+                          <button
+                            onClick={() => setQuantity(quantity + 1)}
+                            className="w-10 h-10 flex items-center justify-center text-lg hover:bg-gray-50"
+                            aria-label="Increase quantity"
+                          >
+                            +
+                          </button>
                         </div>
                       </div>
-                    )}
-
-                    {/* Quantity */}
-                    <div className="mt-4">
-                      <h3 className="text-sm font-medium text-gray-900 mb-2">Quantity</h3>
-                      <div className="inline-flex items-center border border-gray-300 rounded-lg overflow-hidden">
-                        <button
-                          onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                          className="w-10 h-10 flex items-center justify-center text-lg hover:bg-gray-50"
-                          aria-label="Decrease quantity"
-                        >
-                          −
-                        </button>
-                        <span className="w-12 text-center text-base font-semibold">{quantity}</span>
-                        <button
-                          onClick={() => setQuantity(quantity + 1)}
-                          className="w-10 h-10 flex items-center justify-center text-lg hover:bg-gray-50"
-                          aria-label="Increase quantity"
-                        >
-                          +
-                        </button>
-                      </div>
+                      {product.sizes && product.sizes.length > 0 && (
+                        <div className="ml-auto">
+                          <h3 className="text-sm font-medium text-gray-900 mb-2 text-right">Size</h3>
+                          <div className="flex flex-wrap gap-2 justify-end">
+                            {product.sizes.map((size) => (
+                              <button
+                                key={size.name}
+                                onClick={() => setSelectedSize(size.name)}
+                                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
+                                  selectedSize === size.name
+                                    ? "border-[#8B4513] bg-[#8B4513] text-white"
+                                    : "border-gray-300 text-gray-700 hover:border-gray-400"
+                                }`}
+                              >
+                                {size.name}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  <div className="pl-4 flex flex-col gap-2 text-sm text-gray-700">
-                    <p className="font-medium text-amber-700">Almost sold out!</p>
-                    <p>📦 Free Nationalwide shipping</p>
-                    <p>🌱 Eco-friendly Production</p>
                   </div>
                 </div>
 
@@ -367,7 +523,7 @@ const ProductDetail = () => {
               </div>
 
               {/* Details accordions */}
-              <div className=" rounded-2xl shadow-sm border border-gray-200 divide-y">
+              <div className=" rounded-2xl  divide-y">
                 <details open className="group p-6">
                   <summary className="flex items-center justify-between cursor-pointer list-none">
                     <span className="text-base font-semibold text-gray-900">Description</span>
@@ -401,6 +557,17 @@ const ProductDetail = () => {
 
               {/* Mobile-only: show review summary and comments below the description section */}
               <div className="block lg:hidden space-y-6">
+                {/* Mobile-only sticky Write Review button above Customer Reviews */}
+                <div className="top-0 z-40 bg-[#F5F3F0]/95 backdrop-blur border-b -mx-4 px-4 py-2">
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleWriteReview}
+                      className="inline-flex items-center gap-2 border border-[#8B4513] text-white bg-[#8B4513] hover:bg-[#7A3F12] px-4 py-2 rounded-lg text-sm font-semibold"
+                    >
+                      + Write Review
+                    </button>
+                  </div>
+                </div>
                 <ReviewSummary productId={id} />
                 <ReviewsList productId={id} showSummary={false} />
               </div>
@@ -409,109 +576,19 @@ const ProductDetail = () => {
         </div>
       </div>
 
+  
+
   {/* Desktop-only: Customer comments grid (summary shown above under gallery) */}
   <div className="hidden lg:block max-w-7xl mx-auto px-4 py-16">
+    <ReviewsList productId={id} showSummary={false} />
+  </div>
 
-        {/* Review Form Modal */}
-        {showReviewForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="space-y-6 lg:col-span-5">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-2xl font-bold text-gray-900">Write a Review</h3>
-                  <button
-                    onClick={() => setShowReviewForm(false)}
-                    className="text-gray-500 hover:text-gray-700 text-2xl"
-                  >
-                    ×
-                  </button>
-                </div>
-
-                {/* Order Information Form */}
-                <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <h4 className="font-semibold text-gray-800 mb-3">Order Information Required</h4>
-                  <p className="text-sm text-gray-600 mb-4">
-                    To ensure authentic reviews, please provide your order details. This information will be verified
-                    before your review is published.
-                  </p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Order Number *</label>
-                      <input
-                        type="text"
-                        value={reviewFormData.orderNumber}
-                        onChange={(e) => setReviewFormData({ ...reviewFormData, orderNumber: e.target.value })}
-                        placeholder="Enter your order number"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B4513] focus:border-transparent"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
-                      <input
-                        type="email"
-                        value={reviewFormData.customerEmail}
-                        onChange={(e) => setReviewFormData({ ...reviewFormData, customerEmail: e.target.value })}
-                        placeholder="Enter your email address"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8B4513] focus:border-transparent"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Review Form */}
-                {reviewFormData.orderNumber && reviewFormData.customerEmail ? (
-                  <ReviewForm
-                    productId={id}
-                    orderNumber={reviewFormData.orderNumber}
-                    customerEmail={reviewFormData.customerEmail}
-                    onReviewSubmitted={handleReviewSubmitted}
-                  />
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>Please fill in your order information above to continue with your review.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-  <ReviewsList productId={id} showSummary={false} />
-      </div>
-
-      {/* Feature strip */}
-      <div className="bg-white border-y">
-        <div className="max-w-7xl mx-auto px-4 py-10 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
-          <div className="flex items-center justify-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">🚚</div>
-            <div className="text-left">
-              <div className="text-sm font-semibold text-gray-900">Fast Shipping</div>
-              <div className="text-xs text-gray-500">Dispatch within 24-48 hours</div>
-            </div>
-          </div>
-          <div className="flex items-center justify-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">🔒</div>
-            <div className="text-left">
-              <div className="text-sm font-semibold text-gray-900">Secure Payments</div>
-              <div className="text-xs text-gray-500">SSL-encrypted checkout</div>
-            </div>
-          </div>
-          <div className="flex items-center justify-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">↩️</div>
-            <div className="text-left">
-              <div className="text-sm font-semibold text-gray-900">Easy Returns</div>
-              <div className="text-xs text-gray-500">7-day hassle-free returns</div>
-            </div>
-          </div>
-        </div>
-      </div>
+   
 
       {/* You might also like section */}
-      <div className="bg-white py-16">
+      <div className=" py-4">
         <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">You might also like</h2>
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">Other Things You'll  Love</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {relatedProducts.map((relatedProduct) => (
               <div

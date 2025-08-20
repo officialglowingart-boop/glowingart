@@ -1,17 +1,17 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getProductReviews } from "../services/api"
+import { getProductReviewSummary } from "../services/api"
 
 const ReviewSummary = ({ productId }) => {
-  const [reviews, setReviews] = useState([])
+  const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetch = async () => {
+  const fetch = async () => {
       try {
-        const res = await getProductReviews(productId)
-        setReviews(res.reviews || [])
+    const res = await getProductReviewSummary(productId)
+    setSummary(res)
       } catch (e) {
         console.error("Error fetching reviews:", e)
       } finally {
@@ -29,7 +29,7 @@ const ReviewSummary = ({ productId }) => {
     )
   }
 
-  if (!reviews.length) {
+  if (!summary || !summary.total) {
     return (
       <div className="bg-white rounded-2xl border border-gray-200 p-6 text-sm text-gray-600">
         No reviews yet
@@ -37,16 +37,16 @@ const ReviewSummary = ({ productId }) => {
     )
   }
 
-  const average = (
-    reviews.reduce((acc, r) => acc + (r.rating || 0), 0) / reviews.length
-  ).toFixed(1)
+  const average = (summary.average || 0).toFixed(1)
+  const total = summary.total || 0
+  const starCounts = summary.starCounts || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-6">
       <div className="flex items-center justify-between gap-6 flex-wrap">
         <div>
           <h3 className="text-xl font-semibold text-gray-900">Customer Reviews</h3>
-          <p className="text-sm text-gray-600">Based on {reviews.length} review{reviews.length > 1 ? 's' : ''}</p>
+          <p className="text-sm text-gray-600">Based on {total} review{total > 1 ? 's' : ''}</p>
         </div>
         <div className="flex items-center gap-3 whitespace-nowrap">
           <div className="text-3xl">⭐</div>
@@ -59,8 +59,8 @@ const ReviewSummary = ({ productId }) => {
 
       <div className="mt-6 space-y-2">
         {[5,4,3,2,1].map((star) => {
-          const count = reviews.filter(r => r.rating === star).length
-          const percent = Math.round((count / reviews.length) * 100)
+          const count = starCounts[star] || 0
+          const percent = total ? Math.round((count / total) * 100) : 0
           return (
             <div key={star} className="flex items-center gap-3">
               <div className="w-10 text-sm text-gray-700">{star}★</div>

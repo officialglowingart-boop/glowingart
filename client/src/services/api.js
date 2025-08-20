@@ -30,7 +30,11 @@ export const updateProduct = (id, productData) => api.put(`/products/${id}`, pro
 export const deleteProduct = (id) => api.delete(`/products/${id}`).then((res) => res.data)
 
 // Reviews API
-export const getProductReviews = (productId) => api.get(`/reviews/product/${productId}`).then((res) => res.data)
+export const getProductReviews = (productId, params = {}) =>
+  api.get(`/reviews/product/${productId}`, { params }).then((res) => res.data)
+
+export const getProductReviewSummary = (productId) =>
+  api.get(`/reviews/product/${productId}/summary`).then((res) => res.data)
 
 export const getAllApprovedReviews = (params = {}) => api.get("/reviews/approved", { params }).then((res) => res.data)
 

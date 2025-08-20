@@ -3,22 +3,63 @@ const router = express.Router()
 const Review = require("../models/Review")
 const Product = require("../models/Product")
 const Order = require("../models/Order")
+const mongoose = require("mongoose")
 const { authenticateAdmin } = require("../middleware/auth")
 const { upload } = require("../middleware/upload")
 
-// Get approved reviews for a product (public)
+// Get approved reviews for a product (public) with pagination
 router.get("/product/:productId", async (req, res) => {
   try {
-    const reviews = await Review.find({
-      product: req.params.productId,
-      isApproved: true,
-    })
-      .sort({ createdAt: -1 })
-      .populate("product", "name")
+    const { page = 1, limit = 15 } = req.query
+    const filter = { product: req.params.productId, isApproved: true }
 
-    res.json({ reviews })
+    const [reviews, total] = await Promise.all([
+      Review.find(filter)
+        .sort({ createdAt: -1 })
+        .limit(Number(limit))
+        .skip((Number(page) - 1) * Number(limit))
+        .populate("product", "name"),
+      Review.countDocuments(filter),
+    ])
+
+    res.json({
+      reviews,
+      total,
+      totalPages: Math.ceil(total / Number(limit)),
+      currentPage: Number(page),
+    })
   } catch (error) {
     res.status(500).json({ message: "Error fetching reviews", error: error.message })
+  }
+})
+
+// Get summary for a product's reviews (average, total, per-star counts)
+router.get("/product/:productId/summary", async (req, res) => {
+  try {
+    const productId = req.params.productId
+    const match = { product: new mongoose.Types.ObjectId(productId), isApproved: true }
+
+    const starBuckets = await Review.aggregate([
+      { $match: match },
+      { $group: { _id: "$rating", count: { $sum: 1 }, sum: { $sum: "$rating" } } },
+    ])
+
+    const starCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+    let total = 0
+    let totalSum = 0
+    starBuckets.forEach((b) => {
+      const rating = String(b._id)
+      if (starCounts[rating] !== undefined) starCounts[rating] = b.count
+      else if (starCounts[Number(rating)] !== undefined) starCounts[Number(rating)] = b.count
+      total += b.count
+      totalSum += b.sum
+    })
+
+    const average = total > 0 ? Math.round((totalSum / total) * 10) / 10 : 0
+
+    res.json({ average, total, starCounts })
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching review summary", error: error.message })
   }
 })
 

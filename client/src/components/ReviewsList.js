@@ -6,28 +6,51 @@ import { getProductReviews } from "../services/api"
 const ReviewsList = ({ productId, showSummary = true }) => {
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
-  const getInitialCount = () => {
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const getPageSize = () => {
     if (typeof window === 'undefined') return 6
     return window.matchMedia('(min-width: 1024px)').matches ? 10 : 6
   }
-  const [visibleCount, setVisibleCount] = useState(getInitialCount())
+  const [pageSize, setPageSize] = useState(getPageSize())
 
   useEffect(() => {
-    setVisibleCount(getInitialCount())
-    fetchReviews()
+    // reset when product changes
+    setReviews([])
+    setPage(1)
+    setHasMore(true)
+    fetchReviews(1, getPageSize())
   }, [productId])
 
-  // Optional: adjust count on viewport resize to keep parity with requirement
+  // Update page size on resize and refetch from page 1
   useEffect(() => {
-    const handler = () => setVisibleCount(getInitialCount())
+    const handler = () => {
+      const size = getPageSize()
+      setPageSize(size)
+    }
     window.addEventListener('resize', handler)
     return () => window.removeEventListener('resize', handler)
   }, [])
 
-  const fetchReviews = async () => {
+  // When page size changes (e.g., due to resize), reset and refetch first page
+  useEffect(() => {
+    setReviews([])
+    setPage(1)
+    setHasMore(true)
+    fetchReviews(1, pageSize)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageSize])
+
+  const fetchReviews = async (nextPage = page, limitOverride) => {
     try {
-      const response = await getProductReviews(productId)
-      setReviews(response.reviews)
+      setLoading(true)
+      const limit = typeof limitOverride === 'number' ? limitOverride : pageSize
+      const response = await getProductReviews(productId, { page: nextPage, limit })
+      const newReviews = response.reviews || []
+      setReviews((prev) => (nextPage === 1 ? newReviews : [...prev, ...newReviews]))
+      const totalPages = response.totalPages || 1
+      setHasMore(nextPage < totalPages)
+      setPage(nextPage)
     } catch (error) {
       console.error("Error fetching reviews:", error)
     } finally {
@@ -35,7 +58,7 @@ const ReviewsList = ({ productId, showSummary = true }) => {
     }
   }
 
-  if (loading) {
+  if (loading && reviews.length === 0) {
     return (
       <div className="bg-white rounded-xl border border-gray-200 p-6 text-center text-gray-600">
         Loading reviews...
@@ -94,7 +117,7 @@ const ReviewsList = ({ productId, showSummary = true }) => {
 
       {/* Reviews masonry-style: 2 columns on mobile, 4 on desktop */}
       <div className="columns-2 lg:columns-4 gap-4 md:gap-6 [column-fill:_balance]">
-        {reviews.slice(0, visibleCount).map((review) => (
+        {reviews.map((review) => (
           <div key={review._id} className="mb-4 md:mb-6 break-inside-avoid" style={{ breakInside: 'avoid' }}>
             <div className="bg-white rounded-2xl border border-gray-200 p-6 relative">
               <div className="flex items-start justify-between">
@@ -134,13 +157,13 @@ const ReviewsList = ({ productId, showSummary = true }) => {
         ))}
       </div>
 
-      {visibleCount < reviews.length && (
+  {hasMore && (
         <div className="flex justify-center">
           <button
             className="px-6 py-2.5 border border-gray-300 bg-white hover:bg-gray-50 rounded-lg text-sm font-medium text-gray-700"
-            onClick={() => setVisibleCount((c) => Math.min(c + 20, reviews.length))}
+    onClick={() => fetchReviews(page + 1)}
           >
-            More
+    Load more
           </button>
         </div>
       )}
