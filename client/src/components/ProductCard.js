@@ -103,32 +103,26 @@ const ProductCard = ({ product }) => {
         
         {/* Product Info */}
         <div className="p-3 sm:p-4">
-          <h3 className="font-medium text-gray-800 mb-1 sm:mb-2 text-sm sm:text-base font-serif line-clamp-2" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
+          <h3 className="font-medium text-gray-800 text-sm sm:text-base font-serif line-clamp-2" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
             {name}
           </h3>
           
-          {/* Rating */}
-          <div className="flex items-center mb-1 sm:mb-2">
-            <div className="flex text-yellow-400 text-xs sm:text-sm">
-              {[...Array(5)].map((_, i) => (
-                <span key={i} className={i < Math.floor(rating) ? 'text-yellow-400' : 'text-gray-300'}>★</span>
-              ))}
-            </div>
-            <span className="text-gray-500 text-xs ml-1 sm:ml-2 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
-              ({reviewCount || 0})
+          {/* Starting from (all breakpoints, above price) */}
+          {sizes.length > 1 && (
+            <span className="inline-block text-xs text-gray-500 font-serif " style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
+              Starting from
             </span>
-          </div>
-          
+          )}
+
           {/* Price */}
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col">
-              {(() => {
-                const minPrice = getMinPrice();
-                const maxPrice = getMaxPrice();
-                const showRange = Number.isFinite(minPrice) && Number.isFinite(maxPrice) && maxPrice > minPrice;
-                return (
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-lg sm:text-xl font-bold text-gray-900 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
+          <div className="flex flex-col">
+            {(() => {
+              const minPrice = getMinPrice();
+              const maxPrice = getMaxPrice();
+              const showRange = Number.isFinite(minPrice) && Number.isFinite(maxPrice) && maxPrice > minPrice;
+              return (
+                  <div className="flex items-baseline gap-1 sm:gap-2">
+                    <span className="text-lg sm:text-xl font-extrabold text-red-600 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
                       Rs.{minPrice.toLocaleString()}
                     </span>
                     {showRange && (
@@ -136,23 +130,33 @@ const ProductCard = ({ product }) => {
                         Rs.{maxPrice.toLocaleString()}
                       </span>
                     )}
-                  </div>
-                );
-              })()}
-              {sizes.length > 1 && (
-                <span className="text-xs text-gray-500 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
-                  Starting from
-                </span>
-              )}
-            </div>
-            <button 
-              onClick={handleAddToCart}
-              className="bg-gray-800 hover:bg-gray-700 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-serif transition-colors duration-200" 
-              style={{ fontFamily: 'Times, "Times New Roman", serif' }}
-            >
-              Add to Cart
-            </button>
+                </div>
+              );
+            })()}
+            {/* 'Starting from' shown above price for all sizes */}
           </div>
+
+          {/* Rating (all sizes, above the Add to Cart button) */}
+          <div className="flex items-center">
+            <div className="flex text-yellow-400 text-xs sm:text-sm">
+              {[...Array(5)].map((_, i) => (
+                <span key={i} className={i < Math.floor(rating) ? 'text-yellow-400' : 'text-gray-300'}>★</span>
+              ))}
+            </div>
+            <span className="text-gray-500 text-xs sm:text-sm ml-2 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
+              ({reviewCount || 0})
+            </span>
+          </div>
+
+          {/* Add to Cart: full-width at card bottom */}
+          <button
+            onClick={handleAddToCart}
+            aria-label="Add product to cart"
+            className="mt-2 sm:mt-3 w-full bg-[#333] hover:bg-[#333] text-white py-2 rounded-md text-sm sm:text-base font-serif transition-colors duration-200"
+            style={{ fontFamily: 'Times, "Times New Roman", serif' }}
+          >
+            Add to Cart
+          </button>
         </div>
       </div>
     </Link>
