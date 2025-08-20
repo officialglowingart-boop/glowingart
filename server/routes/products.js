@@ -175,31 +175,68 @@ router.get("/:id", async (req, res) => {
   }
 })
 
+// Helpers
+const safeJsonParse = (val, fallback) => {
+  if (val === undefined || val === null || val === "") return fallback
+  if (Array.isArray(val) || typeof val === "object") return val
+  try {
+    return JSON.parse(val)
+  } catch (e) {
+    return fallback
+  }
+}
+
+const normalizeSizes = (sizesArr = []) => {
+  if (!Array.isArray(sizesArr)) return []
+  return sizesArr
+    .filter((s) => s && s.name)
+    .map((s) => ({
+      name: s.name,
+      price: Number(s.price) || 0,
+      originalPrice: s.originalPrice !== undefined && s.originalPrice !== null && s.originalPrice !== ""
+        ? Number(s.originalPrice)
+        : undefined,
+    }))
+}
+
 // Create product (admin only)
 router.post("/", auth, upload.array("images", 5), async (req, res) => {
   try {
-    const { name, description, category, sizes, tags, featured } = req.body
+    const { name, description, category, sizes, tags, featured, inStock } = req.body
 
-    const images =
-      req.files?.map((file) => ({
-        url: file.path,
-        publicId: file.filename,
-      })) || []
+    // Basic validation for required fields
+    if (!name || !description || !category) {
+      return res.status(400).json({ message: "name, description and category are required" })
+    }
+
+    const images = (req.files || []).map((file) => ({ url: file.path, publicId: file.filename }))
+
+    const parsedSizes = normalizeSizes(safeJsonParse(sizes, []))
+    const parsedTags = safeJsonParse(tags, [])
+
+    if (!parsedSizes.length) {
+      return res.status(400).json({ message: "At least one size with name and price is required" })
+    }
 
     const product = new Product({
       name,
       description,
       category,
       images,
-      sizes: JSON.parse(sizes),
-      tags: tags ? JSON.parse(tags) : [],
-      featured: featured === "true",
+      sizes: parsedSizes,
+      tags: parsedTags,
+      featured: `${featured}` === "true",
+      inStock: `${inStock}` !== "false",
     })
 
     await product.save()
     res.status(201).json(product)
   } catch (error) {
     console.error("Create product error:", error)
+    // If validation error from Mongoose, show it clearly
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: error.message })
+    }
     res.status(500).json({ message: "Server error" })
   }
 })
@@ -213,10 +250,10 @@ router.put("/:id", auth, upload.array("images", 5), async (req, res) => {
       name,
       description,
       category,
-      sizes: JSON.parse(sizes),
-      tags: tags ? JSON.parse(tags) : [],
-      featured: featured === "true",
-      inStock: inStock !== "false",
+      sizes: normalizeSizes(safeJsonParse(sizes, [])),
+      tags: safeJsonParse(tags, []),
+      featured: `${featured}` === "true",
+      inStock: `${inStock}` !== "false",
     }
 
     if (req.files && req.files.length > 0) {

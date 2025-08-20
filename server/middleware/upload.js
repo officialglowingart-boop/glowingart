@@ -17,10 +17,12 @@ const upload = multer({
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith("image/")) {
+    if (file.mimetype && file.mimetype.startsWith("image/")) {
       cb(null, true)
     } else {
-      cb(new Error("Only image files are allowed"), false)
+      const err = new Error("Only image files are allowed")
+      err.statusCode = 400
+      cb(err, false)
     }
   },
 })

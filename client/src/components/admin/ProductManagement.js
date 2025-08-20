@@ -47,6 +47,15 @@ const ProductManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
+      // Basic client-side validation to avoid 500s from bad payloads
+      const invalidSize = (formData.sizes || []).some(
+        (s) => !s || !s.name || s.name.trim() === "" || isNaN(Number(s.price))
+      )
+      if (invalidSize) {
+        alert("Please provide at least one size with a valid name and price.")
+        return
+      }
+
       const productFormData = new FormData()
 
       // Add basic fields
@@ -74,8 +83,9 @@ const ProductManagement = () => {
       resetForm()
       fetchProducts()
     } catch (error) {
-      console.error("Error saving product:", error)
-      alert("Error saving product. Please try again.")
+  console.error("Error saving product:", error)
+  const msg = error?.response?.data?.message || error?.message || "Error saving product. Please try again."
+  alert(msg)
     }
   }
 
@@ -148,7 +158,7 @@ const ProductManagement = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await getCategories()
+      const response = await getCategories(true)
       if (response.categories && response.categories.length > 0) {
         setCategories(response.categories)
       }
@@ -227,13 +237,13 @@ const ProductManagement = () => {
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition duration-200"
                 >
-                  {categories.map((cat) =>
+                  {categories.map((cat) => (
                     typeof cat === "string" ? (
                       <option key={cat} value={cat}>{cat}</option>
                     ) : (
                       <option key={cat._id} value={cat.name}>{cat.name}</option>
                     )
-                  )}
+                  ))}
                 </select>
               </div>
 

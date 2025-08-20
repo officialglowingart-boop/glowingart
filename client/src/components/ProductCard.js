@@ -103,7 +103,7 @@ const ProductCard = ({ product }) => {
         
         {/* Product Info */}
         <div className="p-3 sm:p-4">
-          <h3 className="font-medium text-gray-800 text-sm sm:text-base font-serif line-clamp-2" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
+          <h3 className="font-medium text-gray-800 text-sm sm:text-base font-serif line-clamp-1" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
             {name}
           </h3>
           

@@ -14,7 +14,7 @@ const productSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      enum: ["Limited Designs", "One Piece", "More Anime", "Never Forgotten"],
+      trim: true,
     },
     images: [
       {
