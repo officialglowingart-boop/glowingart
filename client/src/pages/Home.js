@@ -283,28 +283,28 @@ const Home = () => {
               {displayedReviews.map((review) => (
                 <div key={review._id} className="break-inside-avoid">
                   <div className="bg-white rounded-lg p-4 sm:p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                    {/* Review Header */}
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center min-w-0">
+                    {/* Header: top row (Verified left, Date right), second row (Name left, Stars right) */}
+                    <div className="mb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <span className="text-green-600 text-sm">✓</span>
+                          <span className="text-xs text-gray-500 ml-1 font-serif">Verified</span>
+                        </div>
+                        <span className="text-xs text-gray-500 font-serif">
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="mt-1 flex flex-col items-start sm:flex-row sm:items-center sm:justify-between">
                         <h4
-                          className="font-medium text-gray-800 font-serif truncate"
+                          className="font-medium text-gray-800 font-serif whitespace-normal break-words sm:truncate pr-3"
                           style={{ fontFamily: 'Times, "Times New Roman", serif' }}
                         >
                           {review.customerName}
                         </h4>
-                        <div className="ml-2 flex items-center flex-shrink-0">
-                          <span className="text-green-600 text-sm">✓</span>
-                          <span className="text-xs text-gray-500 ml-1 font-serif">Verified</span>
+                        <div className="mt-1 sm:mt-0 sm:ml-3 flex-shrink-0">
+                          <StarRating rating={review.rating} />
                         </div>
                       </div>
-                      <span className="text-xs text-gray-500 font-serif flex-shrink-0 ml-2">
-                        {new Date(review.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-
-                    {/* Rating */}
-                    <div className="mb-3">
-                      <StarRating rating={review.rating} />
                     </div>
 
                     {/* Review Text */}
