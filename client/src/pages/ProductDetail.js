@@ -20,6 +20,7 @@ const ProductDetail = () => {
   const [selectedSize, setSelectedSize] = useState("")
   const [quantity, setQuantity] = useState(1)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false)
   const [customerName, setCustomerName] = useState("")
   const [showReviewForm, setShowReviewForm] = useState(false)
   const [reviewFormData, setReviewFormData] = useState({
@@ -99,6 +100,32 @@ const ProductDetail = () => {
     }
   }, [showReviewForm])
 
+  // Modal UX: ESC to close + lock background scroll when open (no auto-advance inside modal)
+  useEffect(() => {
+    if (!isImageModalOpen) return
+    const onKey = (e) => {
+      if (e.key === "Escape") setIsImageModalOpen(false)
+    }
+    document.addEventListener("keydown", onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.removeEventListener("keydown", onKey)
+      document.body.style.overflow = prev
+    }
+  }, [isImageModalOpen])
+
+  // Auto-advance gallery only on the main page (pause when modal is open)
+  useEffect(() => {
+    if (isImageModalOpen) return
+    const total = (product?.images || []).length
+    if (!total || total < 2) return
+    const id = setInterval(() => {
+      setSelectedImageIndex((idx) => (idx + 1) % total)
+    }, 5000)
+    return () => clearInterval(id)
+  }, [isImageModalOpen, product?.images])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F5F3F0] flex items-center justify-center">
@@ -134,6 +161,7 @@ const ProductDetail = () => {
     : 0
 
   return (
+    <>
     <div className="min-h-screen bg-[#F5F3F0]">
       {/* Header Section with breadcrumb */}
       <div className="bg-white border-b">
@@ -291,7 +319,7 @@ const ProductDetail = () => {
                 </div>
                 {/* Main image */}
                 <div className="flex-1">
-                  <div className="aspect-square rounded-xl bg-gray-100 overflow-hidden">
+                  <div className="aspect-square rounded-xl bg-gray-100 overflow-hidden cursor-zoom-in" onClick={() => product.images?.length && setIsImageModalOpen(true)}>
                     {product.images && product.images.length > 0 ? (
                       <img
                         src={product.images[selectedImageIndex]?.url || "/placeholder.svg"}
@@ -309,7 +337,7 @@ const ProductDetail = () => {
 
               {/* Mobile/Tablet main image */}
               <div className="lg:hidden">
-                <div className="aspect-square rounded-xl bg-gray-100 overflow-hidden">
+                <div className="aspect-square rounded-xl bg-gray-100 overflow-hidden cursor-zoom-in" onClick={() => product.images?.length && setIsImageModalOpen(true)}>
                   {product.images && product.images.length > 0 ? (
                     <img
                       src={product.images[selectedImageIndex]?.url || "/placeholder.svg"}
@@ -631,7 +659,38 @@ const ProductDetail = () => {
           </div>
         </div>
       </div>
-    </div>
+  </div>
+
+      {/* Image Modal - show only the clicked image (no thumbnails or navigation) */}
+      {isImageModalOpen && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-3 sm:p-4 "
+          onClick={() => setIsImageModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Product image"
+        >
+          <div
+            className="relative lg:w-[45%]   lg:h-[90vh] bg-white rounded-1xl shadow-xl overflow-hidden p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              aria-label="Close"
+              className="absolute right-3 top-3 z-20 inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/95 hover:bg-white text-gray-700 shadow-md"
+              onClick={() => setIsImageModalOpen(false)}
+            >
+              <FiX className="w-5 h-5" />
+            </button>
+
+            <img
+              src={product.images?.[selectedImageIndex]?.url || '/placeholder.svg'}
+              alt={product.name}
+              className="w-full h-full object-contain"
+            />
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 
