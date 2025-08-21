@@ -289,6 +289,18 @@ router.put("/admin/verify/:id", authenticateAdmin, async (req, res) => {
     }
     await order.save()
 
+    // Notify customer on verification result (restore previous behavior)
+    try {
+      if (isVerified) {
+        await sendPaymentInstructions(order, "confirmed")
+      } else {
+        // For rejected, you can also notify via a status update if desired
+        // await sendStatusUpdate(order)
+      }
+    } catch (notificationError) {
+      console.error("Notification error:", notificationError)
+    }
+
     res.json({ message: "Payment verification updated successfully", payment })
   } catch (error) {
     res.status(500).json({ message: "Error updating payment verification", error: error.message })
