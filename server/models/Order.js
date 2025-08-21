@@ -97,7 +97,8 @@ const orderSchema = new mongoose.Schema(
     paymentMethod: {
       type: String,
       required: true,
-      enum: ["JazzCash", "EasyPaisa", "Bank Transfer", "Crypto", "COD"],
+      // Allow all front-end options, including USDT (TRC-20)
+      enum: ["JazzCash", "EasyPaisa", "Bank Transfer", "USDT (TRC-20)", "Crypto", "COD"],
     },
     paymentStatus: {
       type: String,

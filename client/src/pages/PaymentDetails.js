@@ -26,7 +26,8 @@ const PaymentDetails = () => {
       setOrder(response.order)
     } catch (error) {
       console.error("Error fetching payment instructions:", error)
-      alert("Order not found")
+      const msg = error?.response?.data?.message || "Order not found"
+      alert(msg)
       navigate("/")
     } finally {
       setLoading(false)
@@ -74,7 +75,7 @@ const PaymentDetails = () => {
   const getPaymentDetails = () => {
     if (!order) return null
 
-    const { paymentMethod } = order
+  const { paymentMethod } = order
 
     switch (paymentMethod) {
       case "JazzCash":
@@ -94,7 +95,8 @@ const PaymentDetails = () => {
           additionalInfo: "After payment, enter your transaction ID below and upload the receipt screenshot.",
         }
 
-      case "Easypaisa":
+  case "Easypaisa":
+  case "EasyPaisa":
         return {
           title: "Easypaisa Payment Details",
           color: "#00a651",
@@ -127,7 +129,7 @@ const PaymentDetails = () => {
           additionalInfo: "Bank transfers may take 1-2 business days to process.",
         }
 
-      case "Crypto":
+  case "Crypto":
         return {
           title: "Cryptocurrency Payment",
           color: "#f7931a",
@@ -139,6 +141,21 @@ const PaymentDetails = () => {
             Amount: `$${(order.total / 280).toFixed(2)} USD`, // Assuming 1 USD = 280 PKR
           },
           additionalInfo: "Please include your order number in the transaction memo if possible.",
+        }
+
+      case "USDT (TRC-20)":
+        return {
+          title: "USDT (TRC-20) Payment",
+          color: "#26A17B",
+          instructions: [
+            "Send the equivalent amount in USDT (TRC-20) to the address below:",
+          ],
+          details: {
+            "USDT (TRC20)": "TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE",
+            Amount: `$${(order.total / 280).toFixed(2)} USD`,
+            Reference: order.orderNumber,
+          },
+          additionalInfo: "Upload transaction hash and a screenshot after sending.",
         }
 
       default:

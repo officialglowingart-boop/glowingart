@@ -33,7 +33,8 @@ const ProductDetail = () => {
         const productData = await getProduct(id)
         setProduct(productData)
         if (productData.sizes && productData.sizes.length > 0) {
-          setSelectedSize(productData.sizes[0].name)
+          const small = productData.sizes.find((s) => (s?.name || '').toLowerCase() === 'small')
+          setSelectedSize(small ? small.name : productData.sizes[0].name)
         }
       } catch (error) {
         console.error("Error fetching product:", error)

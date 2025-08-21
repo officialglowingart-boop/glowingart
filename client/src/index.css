@@ -33,3 +33,33 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #b8941f;
 }
+
+/* Ensure filled and autofilled inputs use gray-50 instead of light blue */
+input:not(:placeholder-shown),
+textarea:not(:placeholder-shown) {
+  background-color: #f9fafb; /* Tailwind gray-50 */
+}
+
+/* Chrome/Edge/Safari autofill override */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px #f9fafb inset !important;
+  box-shadow: 0 0 0px 1000px #f9fafb inset !important;
+  -webkit-text-fill-color: #111827; /* gray-900 text */
+  caret-color: #111827;
+}
+
+/* Firefox autofill */
+input:-moz-autofill,
+textarea:-moz-autofill,
+select:-moz-autofill {
+  box-shadow: 0 0 0px 1000px #f9fafb inset !important;
+  -moz-text-fill-color: #111827;
+}

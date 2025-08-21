@@ -27,7 +27,24 @@ const generatePaymentInstructions = (paymentMethod, order) => {
         reference: order.orderNumber,
       },
     },
-    Easypaisa: {
+  Easypaisa: {
+      title: "Easypaisa Payment Instructions",
+      steps: [
+        "Open your Easypaisa mobile app",
+        "Select 'Send Money'",
+        `Send Rs.${order.total.toLocaleString()} to: 03009876543`,
+        `Reference: ${order.orderNumber}`,
+        "Take a screenshot of the transaction",
+        "Upload the screenshot and transaction ID below",
+      ],
+      accountDetails: {
+        accountTitle: "Glowing Gallery",
+        accountNumber: "03009876543",
+        reference: order.orderNumber,
+      },
+    },
+    // Alias to support client sending 'EasyPaisa'
+    EasyPaisa: {
       title: "Easypaisa Payment Instructions",
       steps: [
         "Open your Easypaisa mobile app",
@@ -61,7 +78,7 @@ const generatePaymentInstructions = (paymentMethod, order) => {
         reference: order.orderNumber,
       },
     },
-    Crypto: {
+  Crypto: {
       title: "Cryptocurrency Payment Instructions",
       steps: [
         "Choose your preferred cryptocurrency",
@@ -75,6 +92,21 @@ const generatePaymentInstructions = (paymentMethod, order) => {
         bitcoin: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
         ethereum: "0x742d35Cc6634C0532925a3b8D4C0C8b3C2e1e3e3",
         usdt: "TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE",
+        reference: order.orderNumber,
+      },
+    },
+    // Direct USDT TRC-20 method support
+    "USDT (TRC-20)": {
+      title: "USDT (TRC-20) Payment Instructions",
+      steps: [
+        `Send USDT (TRC-20) equivalent to Rs.${order.total.toLocaleString()}`,
+        "Use the wallet address provided below",
+        `Include reference: ${order.orderNumber}`,
+        "Upload transaction hash and screenshot below",
+        "Payment will be confirmed within 1 hour",
+      ],
+      walletAddresses: {
+        usdt_trc20: "TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE",
         reference: order.orderNumber,
       },
     },

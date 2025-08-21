@@ -65,20 +65,13 @@ const ProductCard = ({ product }) => {
       return;
     }
     
-    // Get the first available size (or smallest size)
-    const selectedSize = sizes[0];
-    
-    const cartItem = {
-      _id,
-      name,
-      images,
-      selectedSize: selectedSize.name,
-      price: selectedSize.price,
-      quantity: 1
-    };
-    
+    // Prefer 'Small' if available; otherwise fall back to first size
+    const small = sizes.find(s => (s?.name || '').toLowerCase() === 'small');
+    const selectedSizeName = (small ? small.name : sizes[0]?.name) || 'Small';
+
     try {
-      addToCart(cartItem);
+      // Use CartContext API: addToCart(product, selectedSize, quantity)
+      addToCart(product, selectedSizeName, 1);
       // Trigger cart opening
       window.dispatchEvent(new CustomEvent('openCart'));
     } catch (error) {
