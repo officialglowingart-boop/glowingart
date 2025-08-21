@@ -45,8 +45,23 @@ const Header = () => {
   useEffect(() => {
     const handleOpenCart = () => setIsCartOpen(true);
     window.addEventListener('openCart', handleOpenCart);
-    return () => window.removeEventListener('openCart', handleOpenCart);
+    const handleCloseCart = () => setIsCartOpen(false);
+    window.addEventListener('closeCart', handleCloseCart);
+    return () => {
+      window.removeEventListener('openCart', handleOpenCart);
+      window.removeEventListener('closeCart', handleCloseCart);
+    };
   }, []);
+
+  // Broadcast cart open state so other components (e.g., bottom navbar) can show active state
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('cartState', { detail: isCartOpen }));
+  }, [isCartOpen]);
+
+  // Close cart on route change (e.g., when navigating using bottom navbar)
+  useEffect(() => {
+    setIsCartOpen(false);
+  }, [location.pathname]);
 
   // Auto-focus the search input when opened
   useEffect(() => {
@@ -264,7 +279,7 @@ const Header = () => {
             onClick={() => setIsCartOpen(false)}
           ></div>
 
-          <div className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl">
+          <div className="absolute right-0 top-0 h-full w-[92vw] sm:w-full max-w-md bg-white shadow-xl rounded-l-2xl">
             <div className="flex flex-col h-full">
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-gray-200">
@@ -344,7 +359,7 @@ const Header = () => {
 
               {/* Cart Footer */}
               {cartItems && cartItems.length > 0 && (
-                <div className="border-t border-gray-200 p-4">
+                <div className="border-t border-gray-200 p-4 pb-24 md:pb-4">
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-lg font-semibold text-gray-800">
                       Total: Rs.{getCartTotal().toLocaleString()}

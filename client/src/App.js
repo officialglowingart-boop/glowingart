@@ -102,6 +102,7 @@ import { CartProvider } from "./context/CartContext"
 import { AdminProvider } from "./context/AdminContext"
 import Header from "./components/Header"
 import Footer from "./components/Footer"
+import MobileBottomNav from "./components/MobileBottomNav"
 import Home from "./pages/Home"
 import PrivacyPolicy from "./pages/PrivacyPolicy"
 import OrderTracking from "./pages/OrderTracking"
@@ -152,7 +153,7 @@ function App() {
                 element={
                   <>
                     <Header />
-                    <main>
+                    <main className="pb-16 md:pb-0">
                       <Routes>
                         <Route path="/" element={<Home />} />
                         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -188,6 +189,8 @@ function App() {
                         />
                       </Routes>
                     </main>
+                    {/* Mobile bottom navigation */}
+                    <MobileBottomNav />
                     <Footer />
                   </>
                 }
