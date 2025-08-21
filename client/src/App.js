@@ -112,6 +112,7 @@ import ProductDetail from "./pages/ProductDetail"
 import Products from "./pages/Products"
 import Payment from "./pages/Payment"
 import PaymentDetails from "./pages/PaymentDetails"
+import PaymentSuccess from "./pages/PaymentSuccess"
 import Checkout from "./pages/Checkout"
 
 // Admin Components
@@ -143,6 +144,7 @@ function App() {
               {/* Payment Routes - No Header/Footer */}
               <Route path="/payment" element={<Payment />} />
               <Route path="/payment/:orderNumber" element={<PaymentDetails />} />
+              <Route path="/payment/:orderNumber/success" element={<PaymentSuccess />} />
 
               {/* Public Routes - With Header/Footer */}
               <Route

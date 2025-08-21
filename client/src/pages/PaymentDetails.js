@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { getPaymentInstructions, confirmPayment } from "../services/api"
 
@@ -17,6 +17,11 @@ const PaymentDetails = () => {
     receipt: null,
     notes: "",
   })
+
+  // Preview & modal state for uploaded image
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState(null)
+  const fileInputRef = useRef(null)
 
   useEffect(() => {
     fetchPaymentInstructions()
@@ -53,6 +58,26 @@ const PaymentDetails = () => {
     }
   }
 
+  // Build a stable preview URL and clean it up to avoid memory leaks
+  useEffect(() => {
+    if (paymentData.receipt && paymentData.receipt.type?.startsWith("image/")) {
+      const url = URL.createObjectURL(paymentData.receipt)
+      setPreviewUrl(url)
+      return () => URL.revokeObjectURL(url)
+    }
+    setPreviewUrl(null)
+  }, [paymentData.receipt])
+
+  const handleRemoveReceipt = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setPreviewUrl(null)
+    setPaymentData((d) => ({ ...d, receipt: null }))
+    setIsImageModalOpen(false)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!paymentData.transactionId.trim()) {
@@ -69,9 +94,22 @@ const PaymentDetails = () => {
         formData.append("receipt", paymentData.receipt)
       }
 
-      await confirmPayment(orderNumber, formData)
-      alert("Payment confirmation submitted successfully! We'll verify and update your order status.")
-      navigate("/")
+    const result = await confirmPayment(orderNumber, formData)
+      // Navigate to success page with lightweight order details
+      navigate(`/payment/${orderNumber}/success`, {
+        state: {
+      type: "online",
+          order: {
+            orderNumber: order?.orderNumber || orderNumber,
+            subtotal: order?.subtotal,
+            total: order?.total,
+            shippingProtection: order?.shippingProtection,
+            paymentMethod: order?.paymentMethod,
+          },
+          server: result,
+        },
+        replace: true,
+      })
     } catch (error) {
       console.error("Error confirming payment:", error)
       const msg = error?.response?.data?.message || "Error submitting payment confirmation. Please try again."
@@ -225,19 +263,40 @@ const PaymentDetails = () => {
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">📦</span>
             </div>
-            <h1 className="text-2xl font-bold text-gray-800 mb-4">Cash on Delivery Order</h1>
-            <p className="text-gray-600 mb-6">
-              Your order #{order.orderNumber} has been confirmed. You'll pay Rs.{order.total.toLocaleString()} when your
-              order is delivered.
+            <h1 className="text-2xl font-bold text-gray-800 mb-2">Cash on Delivery</h1>
+            <p className="text-gray-600 mb-6">Order #{order.orderNumber}</p>
+            <p className="text-gray-700 mb-8">
+              You'll pay Rs.{order.total.toLocaleString()} at delivery. Please confirm you want to place this order.
             </p>
-            <div className="bg-blue-50 p-4 rounded-lg mb-6">
-              <p className="text-blue-800 text-sm">
-                We'll contact you via email and WhatsApp to confirm your delivery details and schedule.
-              </p>
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={() =>
+                  navigate(`/payment/${order.orderNumber}/success`, {
+                    state: {
+                      type: "cod",
+                      order: {
+                        orderNumber: order.orderNumber,
+                        subtotal: order.subtotal,
+                        total: order.total,
+                        shippingProtection: order.shippingProtection,
+                        paymentMethod: order.paymentMethod,
+                      },
+                    },
+                    replace: true,
+                  })
+                }
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg"
+              >
+                Confirm Order
+              </button>
+              <button
+                onClick={() => navigate("/")}
+                className="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
             </div>
-            <button onClick={() => navigate("/")} className="bg-yellow-600 text-white px-6 py-2 rounded-lg">
-              Continue Shopping
-            </button>
           </div>
         </div>
       </div>
@@ -366,6 +425,7 @@ const PaymentDetails = () => {
                     <input
                       type="file"
                       accept="image/*,application/pdf"
+                      ref={fileInputRef}
                       onChange={handleFileChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                     />
@@ -375,15 +435,35 @@ const PaymentDetails = () => {
                   {paymentData.receipt && (
                     <div className="mt-2">
                       {paymentData.receipt.type?.startsWith("image/") ? (
-                        <img
-                          src={URL.createObjectURL(paymentData.receipt) || "/placeholder.svg"}
-                          alt="Receipt preview"
-                          className="w-full max-w-xs h-32 object-cover rounded-lg border"
-                        />
+                        <div className="inline-block relative">
+                          <img
+                            src={previewUrl || "/placeholder.svg"}
+                            alt="Receipt preview"
+                            className="w-full max-w-xs h-32 object-cover rounded-lg border cursor-zoom-in"
+                            onClick={() => setIsImageModalOpen(true)}
+                          />
+                          <button
+                            type="button"
+                            onClick={handleRemoveReceipt}
+                            className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-7 h-7 text-xs flex items-center justify-center shadow"
+                            aria-label="Remove image"
+                            title="Remove image"
+                          >
+                            ✕
+                          </button>
+                          <p className="text-xs text-gray-500 mt-1">Click the image to view full size.</p>
+                        </div>
                       ) : (
                         <div className="inline-flex items-center px-3 py-2 rounded-md border text-sm bg-white">
                           <span className="mr-2">📄</span>
                           <span className="truncate max-w-xs">{paymentData.receipt.name}</span>
+                          <button
+                            type="button"
+                            onClick={handleRemoveReceipt}
+                            className="ml-3 text-red-600 hover:underline"
+                          >
+                            Remove
+                          </button>
                         </div>
                       )}
                     </div>
@@ -413,6 +493,25 @@ const PaymentDetails = () => {
           </div>
         </div>
       </div>
+      {/* Image preview modal */}
+      {isImageModalOpen && previewUrl && (
+        <div
+          className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+          onClick={() => setIsImageModalOpen(false)}
+        >
+          <div className="relative max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="absolute -top-3 -right-3 bg-white text-gray-800 rounded-full w-8 h-8 shadow"
+              onClick={() => setIsImageModalOpen(false)}
+              aria-label="Close preview"
+            >
+              ✕
+            </button>
+            <img src={previewUrl} alt="Receipt full size" className="w-full max-h-[80vh] object-contain rounded-md" />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

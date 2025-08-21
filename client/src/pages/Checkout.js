@@ -91,7 +91,8 @@ const Checkout = () => {
         clearCart()
 
         if (paymentMethod === "COD") {
-          navigate(`/order-tracking/${order.orderNumber}`)
+          // Go to COD confirmation page, then to success on user confirmation
+          navigate(`/payment/${order.orderNumber}`)
         } else {
           const orderWithDetails = {
             ...order,
