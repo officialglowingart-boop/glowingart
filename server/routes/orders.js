@@ -14,6 +14,25 @@ router.post("/", async (req, res) => {
     
     const { customerInfo, items, subtotal, shippingProtection, discountCode, total, paymentMethod, notes } = req.body
 
+    // Normalize customer fields to prevent mobile autofill whitespace/issues
+    const normalizedCustomer = {
+      ...customerInfo,
+      firstName: (customerInfo?.firstName || "").trim(),
+      lastName: (customerInfo?.lastName || "").trim(),
+      email: (customerInfo?.email || "").trim().toLowerCase(),
+      phone: (customerInfo?.phone || "").trim(),
+      address: (customerInfo?.address || "").trim(),
+      city: (customerInfo?.city || "").trim(),
+      postalCode: (customerInfo?.postalCode || "").trim(),
+      country: (customerInfo?.country || "").trim(),
+    }
+
+    // Basic email validation to avoid nodemailer errors
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!normalizedCustomer.email || !emailRegex.test(normalizedCustomer.email)) {
+      return res.status(400).json({ message: "Please provide a valid email address" })
+    }
+
     // Validate products and calculate total
     let calculatedSubtotal = 0
     const orderItems = []
@@ -52,7 +71,7 @@ router.post("/", async (req, res) => {
     }
 
     const order = new Order({
-      customerInfo,
+      customerInfo: normalizedCustomer,
       items: orderItems,
       subtotal: calculatedSubtotal,
       shippingProtection,
@@ -65,13 +84,16 @@ router.post("/", async (req, res) => {
     await order.save()
     await order.populate("items.product")
 
-    // Send confirmation notifications
-    try {
-      await sendOrderConfirmation(order)
-    } catch (notificationError) {
-      console.error("Notification error:", notificationError)
-      // Don't fail the order if notification fails
-    }
+    // Send confirmation notifications (don't block response)
+    ;(async () => {
+      try {
+        console.log("📧 Triggering order confirmation for:", order.orderNumber, normalizedCustomer.email)
+        await sendOrderConfirmation(order)
+        console.log("📧 Order confirmation sent for:", order.orderNumber)
+      } catch (notificationError) {
+        console.error("Notification error (order:", order.orderNumber, "):", notificationError?.message || notificationError)
+      }
+    })()
 
     res.status(201).json({
       message: "Order placed successfully",

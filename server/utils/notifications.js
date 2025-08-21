@@ -1308,10 +1308,13 @@ const sendEmail = async (type, to, subject, data) => {
     console.log(`✅ Email sent successfully to ${to}`)
   } catch (error) {
     console.error("❌ Email sending failed:", error.message)
+    console.error("   Email type:", type, "to:", to)
     if (error.code === "EAUTH") {
       console.error("   Authentication failed - check your EMAIL_USER and EMAIL_PASS")
     } else if (error.code === "ECONNECTION") {
       console.error("   Connection failed - check EMAIL_HOST and EMAIL_PORT")
+    } else if (error.response) {
+      console.error("   SMTP response:", error.response)
     }
     throw error
   }
