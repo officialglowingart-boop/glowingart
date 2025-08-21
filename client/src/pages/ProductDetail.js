@@ -366,7 +366,7 @@ const ProductDetail = () => {
           {/* Right - Summary / Buy Panel */}
           <aside className="lg:col-span-5">
             <div className="lg:sticky lg:top-6 space-y-6">
-              <div className=" rounded-2xl  p-6">
+              <div className=" rounded-2xl  p-2">
                  {product.inStock ? (
                     <span className="inline-flex items-center px-4 py-2 rounded-md bg-emerald-50 text-emerald-700 text-xs font-medium">In stock</span>
                   ) : (
