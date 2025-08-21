@@ -58,6 +58,12 @@ const ReviewsList = ({ productId, showSummary = true }) => {
     }
   }
 
+  const getInitials = (name = "") => {
+    const parts = name.trim().split(/\s+/)
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+  }
+
   if (loading && reviews.length === 0) {
     return (
       <div className="bg-white rounded-xl border border-gray-200 p-6 text-center text-gray-600">
@@ -119,25 +125,30 @@ const ReviewsList = ({ productId, showSummary = true }) => {
       <div className="columns-2 lg:columns-4 gap-4 md:gap-6 [column-fill:_balance]">
         {reviews.map((review) => (
           <div key={review._id} className="mb-4 md:mb-6 break-inside-avoid" style={{ breakInside: 'avoid' }}>
-            <div className="bg-white rounded-2xl border border-gray-200 p-6 relative">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h4 className="font-semibold text-gray-900">{review.customerName}</h4>
-                  <div className="flex items-center gap-2">
-                    <div className="flex">
-                      {[...Array(5)].map((_, i) => (
-                        <span key={i} className={`text-base ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
-                      ))}
-                    </div>
-                    <span className="text-xs text-gray-500">{new Date(review.createdAt).toLocaleDateString()}</span>
-                  </div>
+            <div className="bg-white rounded-1xl border border-gray-200 p-2 sm:p-4 relative">
+              {/* Row 1: Verified (left) + Date (right) */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <span className="text-green-600 text-sm">✓</span>
+                  <span className="text-xs text-gray-500 ml-1">Verified</span>
                 </div>
-                {review.rating >= 4 && (
-                  <span className="text-[10px] px-2 -mt-2 rounded bg-emerald-50 text-emerald-700 font-semibold absolute left-4 top-4  lg:static lg:left-auto lg:top-auto">Verified</span>
-                )}
+                <span className="text-xs text-gray-500">{new Date(review.createdAt).toLocaleDateString()}</span>
               </div>
 
-              <p className="text-gray-700 mt-3">{review.comment}</p>
+              {/* Row 2: Name (left) + Stars (right on desktop, below on mobile) */}
+              <div className="flex flex-col items-start gap-0 lg:flex-row lg:items-center lg:justify-between lg:gap-3">
+                <h4 className="font-semibold text-gray-900 pr-3 whitespace-normal leading-tight lg:truncate">{review.customerName}</h4>
+                <div className="mt-0 lg:mt-0 flex-shrink-0">
+                  <div className="flex">
+                    {[...Array(5)].map((_, i) => (
+                      <span key={i} className={`text-base ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Comment */}
+              <p className="text-gray-700">{review.comment}</p>
 
               {review.images && review.images.length > 0 && (
                 <div className="mt-3 grid grid-cols-4 gap-2">
@@ -152,6 +163,14 @@ const ReviewsList = ({ productId, showSummary = true }) => {
                   ))}
                 </div>
               )}
+
+              {/* Footer: Customer avatar + name */}
+              <div className="mt-2 flex items-center">
+                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-[10px] font-semibold text-gray-700">
+                  {getInitials(review.customerName)}
+                </div>
+                <span className="ml-2 text-sm text-gray-600">{review.customerName}</span>
+              </div>
             </div>
           </div>
         ))}
