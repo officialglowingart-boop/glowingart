@@ -1,6 +1,6 @@
 const express = require("express")
 const Order = require("../models/Order")
-const { sendPaymentInstructions } = require("../utils/notifications")
+const { sendPaymentInstructions, sendStatusUpdate } = require("../utils/notifications")
 const { upload, hasCloudinaryConfig } = require("../middleware/upload")
 const { authenticateAdmin } = require("../middleware/auth")
 
@@ -284,18 +284,18 @@ router.put("/admin/verify/:id", authenticateAdmin, async (req, res) => {
       order.paymentStatus = "paid"
       order.orderStatus = "confirmed"
     } else {
-      order.paymentStatus = "failed"
+  order.paymentStatus = "rejected"
   // keep orderStatus unchanged or set to 'cancelled' if that's the intended business rule
     }
     await order.save()
 
-    // Notify customer on verification result (restore previous behavior)
+  // Notify customer on verification result
     try {
       if (isVerified) {
         await sendPaymentInstructions(order, "confirmed")
       } else {
-        // For rejected, you can also notify via a status update if desired
-        // await sendStatusUpdate(order)
+    // For rejected payments, send a status update so the customer is informed
+    await sendStatusUpdate(order)
       }
     } catch (notificationError) {
       console.error("Notification error:", notificationError)

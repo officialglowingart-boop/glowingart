@@ -1177,16 +1177,14 @@ const sendStatusUpdate = async (order) => {
 
 const sendPaymentReminder = async (order) => {
   try {
+    // Per requirement: do NOT send payment reminder emails.
+    // Keep WhatsApp reminder only.
     const paymentInstructions = generatePaymentInstructions(order.paymentMethod, order)
-    const emailData = { order, paymentInstructions }
-    const whatsappData = { order }
+    const whatsappData = { order, paymentInstructions }
 
-    await Promise.all([
-      sendEmail("paymentReminder", order.customerInfo.email, `Payment Reminder - ${order.orderNumber}`, emailData),
-      sendWhatsApp("paymentReminder", order.customerInfo.phone, whatsappData),
-    ])
+    await sendWhatsApp("paymentReminder", order.customerInfo.phone, whatsappData)
 
-    console.log(`Payment reminder sent for ${order.orderNumber}`)
+    console.log(`Payment reminder (WhatsApp only) sent for ${order.orderNumber}`)
   } catch (error) {
     console.error("Payment reminder error:", error)
     throw error
