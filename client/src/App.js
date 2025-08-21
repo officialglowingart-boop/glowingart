@@ -140,6 +140,10 @@ function App() {
               <Route path="/admin/payments" element={<PaymentVerification />} />
               <Route path="/admin/reviews" element={<ReviewManagement />} />
 
+              {/* Payment Routes - No Header/Footer */}
+              <Route path="/payment" element={<Payment />} />
+              <Route path="/payment/:orderNumber" element={<PaymentDetails />} />
+
               {/* Public Routes - With Header/Footer */}
               <Route
                 path="/*"
@@ -160,8 +164,7 @@ function App() {
                         <Route path="/category/:categoryName" element={<Category />} />
                         <Route path="/product/:id" element={<ProductDetail />} />
                         <Route path="/checkout" element={<Checkout />} />
-                        <Route path="/payment" element={<Payment />} />
-                        <Route path="/payment/:orderNumber" element={<PaymentDetails />} />
+                        {/* Payment routes moved out to hide Header/Footer */}
 
                         {/* 404 Route */}
                         <Route

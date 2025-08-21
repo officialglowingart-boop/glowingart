@@ -10,6 +10,8 @@ const PaymentDetails = () => {
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [logoError, setLogoError] = useState(false)
+  const [logoStep, setLogoStep] = useState(0)
   const [paymentData, setPaymentData] = useState({
     transactionId: "",
     receipt: null,
@@ -19,6 +21,12 @@ const PaymentDetails = () => {
   useEffect(() => {
     fetchPaymentInstructions()
   }, [orderNumber])
+
+  // reset logo fallback when method changes
+  useEffect(() => {
+    setLogoError(false)
+    setLogoStep(0)
+  }, [order?.paymentMethod])
 
   const fetchPaymentInstructions = async () => {
     try {
@@ -66,7 +74,8 @@ const PaymentDetails = () => {
       navigate("/")
     } catch (error) {
       console.error("Error confirming payment:", error)
-      alert("Error submitting payment confirmation. Please try again.")
+      const msg = error?.response?.data?.message || "Error submitting payment confirmation. Please try again."
+      alert(msg)
     } finally {
       setSubmitting(false)
     }
@@ -163,6 +172,25 @@ const PaymentDetails = () => {
     }
   }
 
+  // Map payment methods to logo assets placed under /public/assets/payment/
+  // Prefer PNGs from mobile app assets; fallback to our SVG placeholders
+  const getPaymentLogoSrcs = (method) => {
+    const baseMap = {
+      JazzCash: "jazzcash",
+      Easypaisa: "easypaisa",
+      EasyPaisa: "easypaisa",
+      "USDT (TRC-20)": "usdt-trc20",
+      "Bank Transfer": "bank-transfer",
+      Crypto: "crypto",
+    }
+    const base = baseMap[method]
+    if (!base) return []
+    return [
+      `/assets/payment/${base}.png`,
+      `/assets/payment/${base}.svg`,
+    ]
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -217,11 +245,12 @@ const PaymentDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="min-h-screen bg-gray-50 py-8 ">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="rounded-lg  overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-yellow-600 to-yellow-700 text-white p-6">
+          <div className="from-yellow-600 to-yellow-700 text-black
+           p-6">
             <h1 className="text-2xl font-bold mb-2">Complete Your Payment</h1>
             <p className="opacity-90">Order #{order.orderNumber}</p>
           </div>
@@ -232,21 +261,45 @@ const PaymentDetails = () => {
               {paymentDetails && (
                 <div className="mb-8">
                   <div className="flex items-center mb-4">
-                    <div
-                      className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold mr-4"
-                      style={{ backgroundColor: paymentDetails.color }}
-                    >
-                      {order.paymentMethod.charAt(0)}
+                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg mr-4 flex items-center justify-center overflow-hidden bg-white border border-gray-200">
+                      {(() => {
+                        const sources = getPaymentLogoSrcs(order.paymentMethod)
+                        const logoSrc = sources[logoStep]
+                        return logoSrc && !logoError ? (
+                          <img
+                            src={logoSrc}
+                            alt={`${order.paymentMethod} logo`}
+                            className="w-full h-full object-contain p-2 md:p-3"
+                            onError={() => {
+                              // try next source if available else show fallback block
+                              if (logoStep + 1 < (sources?.length || 0)) {
+                                setLogoStep((s) => s + 1)
+                              } else {
+                                setLogoError(true)
+                              }
+                            }}
+                          />
+                        ) : (
+                          <div
+                            className="w-full h-full flex items-center justify-center text-white font-bold"
+                            style={{ backgroundColor: paymentDetails.color }}
+                          >
+                            <span className="text-lg md:text-2xl">{order.paymentMethod?.charAt(0) || "?"}</span>
+                          </div>
+                        )
+                      })()}
                     </div>
                     <h2 className="text-xl font-semibold text-gray-800">{paymentDetails.title}</h2>
                   </div>
 
                   <div className="space-y-4">
-                    {paymentDetails.instructions.map((instruction, index) => (
-                      <p key={index} className="text-gray-700">
-                        {index + 1}. {instruction}
-                      </p>
-                    ))}
+                    <ul className="list-disc pl-6 space-y-2">
+                      {paymentDetails.instructions.map((instruction, index) => (
+                        <li key={index} className="text-gray-700">
+                          {instruction}
+                        </li>
+                      ))}
+                    </ul>
 
                     <div className="bg-gray-50 p-4 rounded-lg">
                       {Object.entries(paymentDetails.details).map(([key, value]) => (
@@ -265,9 +318,31 @@ const PaymentDetails = () => {
               )}
             </div>
 
-            {/* Payment Confirmation Form */}
+            {/* Right column: Order Summary first, then confirmation form */}
             <div>
-              <div className="bg-gray-50 p-6 rounded-lg">
+              {/* Order Summary */}
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-800 mb-3">Order Summary</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Subtotal:</span>
+                    <span>Rs.{order.subtotal.toLocaleString()}</span>
+                  </div>
+                  {order.shippingProtection?.enabled && (
+                    <div className="flex justify-between">
+                      <span>Shipping Protection:</span>
+                      <span>Rs.{order.shippingProtection.cost.toLocaleString()}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between font-semibold text-lg pt-2 border-t">
+                    <span>Total:</span>
+                    <span>Rs.{order.total.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Confirmation Form */}
+              <div className="mt-6 bg-gray-50 p-6 rounded-lg">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Confirm Your Payment</h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
@@ -290,7 +365,7 @@ const PaymentDetails = () => {
                     </label>
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/*,application/pdf"
                       onChange={handleFileChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                     />
@@ -299,11 +374,18 @@ const PaymentDetails = () => {
 
                   {paymentData.receipt && (
                     <div className="mt-2">
-                      <img
-                        src={URL.createObjectURL(paymentData.receipt) || "/placeholder.svg"}
-                        alt="Receipt preview"
-                        className="w-full max-w-xs h-32 object-cover rounded-lg border"
-                      />
+                      {paymentData.receipt.type?.startsWith("image/") ? (
+                        <img
+                          src={URL.createObjectURL(paymentData.receipt) || "/placeholder.svg"}
+                          alt="Receipt preview"
+                          className="w-full max-w-xs h-32 object-cover rounded-lg border"
+                        />
+                      ) : (
+                        <div className="inline-flex items-center px-3 py-2 rounded-md border text-sm bg-white">
+                          <span className="mr-2">📄</span>
+                          <span className="truncate max-w-xs">{paymentData.receipt.name}</span>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -321,32 +403,11 @@ const PaymentDetails = () => {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="w-full bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-400 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                    className="w-full bg-[#333] hover:bg-[#333] disabled:bg-gray-400 text-white py-3 px-4 rounded-lg font-medium transition-colors"
                   >
                     {submitting ? "Submitting..." : "Confirm Payment"}
                   </button>
                 </form>
-              </div>
-
-              {/* Order Summary */}
-              <div className="mt-6 bg-white border border-gray-200 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-800 mb-3">Order Summary</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Subtotal:</span>
-                    <span>Rs.{order.subtotal.toLocaleString()}</span>
-                  </div>
-                  {order.shippingProtection?.enabled && (
-                    <div className="flex justify-between">
-                      <span>Shipping Protection:</span>
-                      <span>Rs.{order.shippingProtection.cost.toLocaleString()}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between font-semibold text-lg pt-2 border-t">
-                    <span>Total:</span>
-                    <span>Rs.{order.total.toLocaleString()}</span>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
