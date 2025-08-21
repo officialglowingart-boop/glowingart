@@ -1,7 +1,7 @@
 const express = require("express")
 const Order = require("../models/Order")
 const { sendPaymentInstructions } = require("../utils/notifications")
-const { upload } = require("../middleware/upload")
+const { upload, hasCloudinaryConfig } = require("../middleware/upload")
 const { authenticateAdmin } = require("../middleware/auth")
 
 const router = express.Router()
@@ -159,9 +159,26 @@ router.get("/instructions/:orderNumber", async (req, res) => {
   }
 })
 
-router.post("/confirm/:orderNumber", upload.single("receipt"), async (req, res) => {
+// Confirm payment submission (with receipt optional)
+router.post(
+  "/confirm/:orderNumber",
+  (req, res, next) => {
+    // wrap multer to capture errors and return friendly message
+    upload.single("receipt")(req, res, (err) => {
+      if (err) {
+        const code = err.statusCode || 400
+        return res.status(code).json({ message: err.message || "File upload error" })
+      }
+      next()
+    })
+  },
+  async (req, res) => {
   try {
     const { transactionId, notes } = req.body
+
+    if (!transactionId || String(transactionId).trim().length < 3) {
+      return res.status(400).json({ message: "Transaction ID is required" })
+    }
 
     const order = await Order.findOne({ orderNumber: req.params.orderNumber })
 
@@ -173,21 +190,33 @@ router.post("/confirm/:orderNumber", upload.single("receipt"), async (req, res) 
     const paymentVerification = new PaymentVerification({
       order: order._id,
       transactionId,
-      receiptUrl: req.file ? req.file.path : null,
+      receiptUrl: req.file && hasCloudinaryConfig ? req.file.path : null,
       notes,
     })
 
-    await paymentVerification.save()
+    try {
+      await paymentVerification.save()
+    } catch (err) {
+      console.error("PaymentVerification save error:", err)
+      return res.status(400).json({ message: err.message || "Could not save payment verification" })
+    }
 
-    // Update order status to payment pending verification
-    order.paymentStatus = "pending_verification"
-    order.orderStatus = "payment_submitted"
-
-    await order.save()
+    // Keep within allowed enums and avoid re-validating unrelated fields (e.g., legacy paymentMethod values)
+    let updatedOrder
+    try {
+      updatedOrder = await Order.findByIdAndUpdate(
+        order._id,
+        { $set: { paymentStatus: "pending" } },
+        { new: true, runValidators: false },
+      )
+    } catch (err) {
+      console.error("Order update error:", err)
+      return res.status(400).json({ message: err.message || "Could not update order status" })
+    }
 
     // Send confirmation notification
     try {
-      await sendPaymentInstructions(order, "payment_submitted")
+  await sendPaymentInstructions(updatedOrder || order, "payment_submitted")
     } catch (notificationError) {
       console.error("Notification error:", notificationError)
     }
@@ -195,16 +224,17 @@ router.post("/confirm/:orderNumber", upload.single("receipt"), async (req, res) 
     res.json({
       message: "Payment confirmation submitted successfully",
       order: {
-        orderNumber: order.orderNumber,
-        paymentStatus: order.paymentStatus,
-        orderStatus: order.orderStatus,
+        orderNumber: (updatedOrder || order).orderNumber,
+        paymentStatus: (updatedOrder || order).paymentStatus,
+        orderStatus: (updatedOrder || order).orderStatus,
       },
     })
   } catch (error) {
     console.error("Confirm payment error:", error)
-    res.status(500).json({ message: "Server error" })
+    res.status(500).json({ message: error?.message || "Server error" })
   }
-})
+}
+)
 
 router.get("/admin/verifications", authenticateAdmin, async (req, res) => {
   try {
@@ -255,7 +285,7 @@ router.put("/admin/verify/:id", authenticateAdmin, async (req, res) => {
       order.orderStatus = "confirmed"
     } else {
       order.paymentStatus = "failed"
-      order.orderStatus = "payment_failed"
+  // keep orderStatus unchanged or set to 'cancelled' if that's the intended business rule
     }
     await order.save()
 

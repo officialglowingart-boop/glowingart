@@ -61,10 +61,10 @@ export const confirmPayment = (orderNumber, paymentData) =>
   api.post(`/payments/confirm/${orderNumber}`, paymentData).then((res) => res.data)
 
 export const getPaymentVerifications = (params = {}) =>
-  api.get("/admin/payments/verifications", { params }).then((res) => res.data)
+  api.get("/payments/admin/verifications", { params }).then((res) => res.data)
 
 export const verifyPayment = (id, verificationData) =>
-  api.put(`/admin/payments/verify/${id}`, verificationData).then((res) => res.data)
+  api.put(`/payments/admin/verify/${id}`, verificationData).then((res) => res.data)
 
 // Categories API
 export const getCategories = (admin = false) =>
