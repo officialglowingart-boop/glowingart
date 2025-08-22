@@ -232,7 +232,7 @@ const Home = () => {
 
       {/* Reviews Section */}
       <div
-        className=" mx-2 sm:mx-4 md:mx-8 rounded-lg p-4 sm:p-6 md:p-8 shadow-sm mb-8 sm:mb-12"
+        className=" sm:mx-4 md:mx-8 rounded-lg p-4 sm:p-6 md:p-8 shadow-sm mb-8 sm:mb-12"
         style={{ backgroundColor: "#dfdfd8" }}
       >
         <div className="text-center mb-6 sm:mb-8">
@@ -282,7 +282,7 @@ const Home = () => {
             <div className="columns-2 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 sm:gap-6 space-y-4 sm:space-y-6">
               {displayedReviews.map((review) => (
                 <div key={review._id} className="break-inside-avoid">
-                  <div className="bg-white rounded-lg p-2 sm:p-4 sm:p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                  <div className="bg-white  p-2 sm:p-4 sm:p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
                     {/* Header: top row (Verified left, Date right), second row (Name left, Stars right) */}
                     <div className="mb-">
                       <div className="flex items-center justify-between">

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { getPaymentInstructions, confirmPayment } from "../services/api"
+import { FiPackage } from "react-icons/fi"
 
 const PaymentDetails = () => {
   const { orderNumber } = useParams()
@@ -261,7 +262,7 @@ const PaymentDetails = () => {
         <div className="max-w-2xl w-full">
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">📦</span>
+              <FiPackage className="text-3xl text-green-700" aria-hidden="true" />
             </div>
             <h1 className="text-2xl font-bold text-gray-800 mb-2">Cash on Delivery</h1>
             <p className="text-gray-600 mb-6">Order #{order.orderNumber}</p>
