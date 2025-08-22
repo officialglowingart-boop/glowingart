@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /payment
+Disallow: /payment-details/
+Disallow: /payment-success
+Disallow: /cart
+
+Sitemap: https://glowing-art.com/sitemap.xml
