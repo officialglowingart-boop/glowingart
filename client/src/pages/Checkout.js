@@ -206,13 +206,13 @@ const Checkout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#dfdfd8] py-8 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
+    <div className="min-h-screen bg-[#dfdfd8] py-3 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
       <div className="container mx-auto max-w-7xl px-4">
-        <h1 className="text-center text-4xl font-bold text-gray-800 mb-12" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>Checkout</h1>
+        <h1 className="text-center text-4xl font-bold text-gray-800 mb-2" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>Checkout</h1>
 
         <div className="grid lg:grid-cols-2 gap-8">
           <div>
-            <div className="rounded-lg  p-6">
+            <div className="rounded-lg p-2 sm:p-6">
               <h2 className="text-2xl font-semibold text-gray-800 mb-6">Customer Information</h2>
 
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -323,19 +323,29 @@ const Checkout = () => {
                   </div>
                   <div>
                     <label htmlFor="country" className="sr-only">Country *</label>
-                    <select
+                    {/* Mobile: show a read-only field to avoid dropdown/render issues */}
+                    <input
+                      type="text"
                       id="country"
                       name="country"
                       value={customerInfo.country}
+                      readOnly
+                      onFocus={(e) => e.target.blur()}
+                      autoComplete="off"
+                      className="md:hidden w-full px-4 py-3 border-2 border-gray-400 bg-transparent outline-none text-gray-900 placeholder-gray-600"
+                      style={{ backgroundColor: '#dfdfd8', fontFamily: 'Times, "Times New Roman", serif' }}
+                    />
+                    {/* Desktop and tablets: native select works fine */}
+                    <select
+                      id="country-desktop"
+                      name="country"
+                      value={customerInfo.country}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-2 border-gray-400 bg-transparent outline-none text-gray-900"
+                      className="hidden md:block w-full px-4 py-3 border-2 border-gray-400 bg-transparent outline-none text-gray-900"
                       style={{ backgroundColor: '#dfdfd8', fontFamily: 'Times, "Times New Roman", serif' }}
                       required
                     >
                       <option value="Pakistan">Pakistan</option>
-                      <option value="India">India</option>
-                      <option value="Bangladesh">Bangladesh</option>
-                      <option value="Other">Other</option>
                     </select>
                   </div>
                 </div>
@@ -411,33 +421,33 @@ const Checkout = () => {
                   )}
 
                   {paymentMethod && (
-                    <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                       {paymentMethod === "JazzCash" && (
-                        <p className="text-blue-700 text-sm">
+                        <p className="text-black text-sm">
                           You will receive JazzCash payment details after placing your order. Please make the payment
                           and upload the receipt.
                         </p>
                       )}
                       {paymentMethod === "EasyPaisa" && (
-                        <p className="text-blue-700 text-sm">
+                        <p className="text-black text-sm">
                           You will receive EasyPaisa payment details after placing your order. Please make the payment
                           and upload the receipt.
                         </p>
                       )}
                       {paymentMethod === "Bank Transfer" && (
-                        <p className="text-blue-700 text-sm">
+                        <p className="text-black text-sm">
                           Bank transfer details will be provided on the next page. Please upload your payment receipt
                           for faster processing.
                         </p>
                       )}
                       {paymentMethod === "USDT (TRC-20)" && (
-                        <p className="text-blue-700 text-sm">
+                        <p className="text-black text-sm">
                           USDT (TRC-20) payment addresses will be provided on the next page. Please upload transaction
                           hash and receipt.
                         </p>
                       )}
                       {paymentMethod === "COD" && (
-                        <p className="text-blue-700 text-sm">
+                        <p className="text-black text-sm">
                           Pay cash when your order is delivered. Cash On Delivery fee may apply for orders under Rs.2,000.
                         </p>
                       )}
