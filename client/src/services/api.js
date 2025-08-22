@@ -1,6 +1,6 @@
 import axios from "axios"
 
-const API_BASE_URL = import.meta.env.REACT_APP_API_URL 
+const API_BASE_URL = "https://glowingart-ruddy.vercel.app/api"
 //const API_BASE_URL = "http://localhost:5000/api"
 
 
