@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams } from "react-router-dom"
 import { trackOrder } from "../services/api"
+import { FaIndustry, FaBox, FaTruck, FaHome } from "react-icons/fa"
 
 const OrderTracking = () => {
   const { orderNumber: paramOrderNumber } = useParams()
@@ -49,25 +50,25 @@ const OrderTracking = () => {
       { 
         key: "processing", 
         label: "Order Processed", 
-        icon: "🏭",
+  icon: <FaIndustry aria-label="Order Processed" />,
         description: "Order is being prepared"
       },
       { 
         key: "shipped", 
         label: "Order Shipped", 
-        icon: "📦",
+  icon: <FaBox aria-label="Order Shipped" />,
         description: "Package is on its way"
       },
       { 
         key: "enroute", 
         label: "Order En Route", 
-        icon: "🚚",
+  icon: <FaTruck aria-label="Order En Route" />,
         description: "Out for delivery"
       },
       { 
         key: "delivered", 
         label: "Order Arrived", 
-        icon: "🏠",
+  icon: <FaHome aria-label="Order Arrived" />,
         description: "Successfully delivered"
       },
     ]
@@ -148,7 +149,7 @@ const OrderTracking = () => {
         {order && (
           <div>
             {/* Modern Order Status Card */}
-            <div className=" rounded-2xl p-8 shadow-lg mb-8" style={{ backgroundColor: '#dfdfd8' }}>
+            <div className=" rounded-2xl p-8  mb-8" style={{ backgroundColor: '#dfdfd8' }}>
               <div className="text-gray-800">
                 {/* Header */}
                 <div className="flex justify-between items-start mb-8">
@@ -173,7 +174,7 @@ const OrderTracking = () => {
                           <div
                             className={`w-12 h-12 rounded-full flex items-center justify-center z-10 relative ${
                               step.completed 
-                                ? 'bg-gray-800 text-purple-600' 
+                                ? 'bg-green-600 text-white' 
                                 : 'bg-gray-300 text-gray-500'
                             }`}
                           >
@@ -202,13 +203,11 @@ const OrderTracking = () => {
                 </div>
 
                 {/* Status Labels */}
-                <div className="grid grid-cols-4 gap-4">
-                  {getStatusSteps(order.orderStatus).map((step, index) => (
-                    <div key={step.key} className="text-center">
-                      <div className="text-2xl mb-2">{step.icon}</div>
-                      <div className={`text-sm font-medium ${step.completed ? 'text-gray-800' : 'text-gray-800'}`}>
-                        {step.label}
-                      </div>
+                <div className="grid grid-cols-4 gap-4 items-start">
+                  {getStatusSteps(order.orderStatus).map((step) => (
+                    <div key={step.key} className="flex flex-col items-center justify-start text-center">
+                      <div className={`text-2xl mb-1 ${step.completed ? 'text-gray-800' : 'text-gray-500'}`}>{step.icon}</div>
+                      <div className={`text-sm font-medium ${step.completed ? 'text-gray-800' : 'text-gray-500'}`}>{step.label}</div>
                     </div>
                   ))}
                 </div>
