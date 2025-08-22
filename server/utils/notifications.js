@@ -1209,8 +1209,12 @@ const sendPaymentConfirmation = async (order) => {
 }
 
 const generatePaymentInstructions = (paymentMethod, order) => {
+  // Normalize payment method coming from client (mobile/desktop may differ slightly)
+  const method = String(paymentMethod || "").trim().toLowerCase()
+
+  // Master instruction set (lowercase keys)
   const instructions = {
-    JazzCash: {
+    jazzcash: {
       title: "JazzCash Payment Instructions",
       steps: [
         "Open your JazzCash mobile app",
@@ -1226,7 +1230,7 @@ const generatePaymentInstructions = (paymentMethod, order) => {
         reference: order.orderNumber,
       },
     },
-    Easypaisa: {
+    easypaisa: {
       title: "Easypaisa Payment Instructions",
       steps: [
         "Open your Easypaisa mobile app",
@@ -1242,7 +1246,7 @@ const generatePaymentInstructions = (paymentMethod, order) => {
         reference: order.orderNumber,
       },
     },
-    "Bank Transfer": {
+    "bank transfer": {
       title: "Bank Transfer Instructions",
       steps: [
         "Visit your bank or use online banking",
@@ -1260,7 +1264,7 @@ const generatePaymentInstructions = (paymentMethod, order) => {
         reference: order.orderNumber,
       },
     },
-    Crypto: {
+    crypto: {
       title: "Cryptocurrency Payment Instructions",
       steps: [
         "Choose your preferred cryptocurrency",
@@ -1277,9 +1281,42 @@ const generatePaymentInstructions = (paymentMethod, order) => {
         reference: order.orderNumber,
       },
     },
+    // Explicit USDT tab from mobile/desktop UI
+    "usdt (trc-20)": {
+      title: "USDT (TRC-20) Payment Instructions",
+      steps: [
+        "Open your crypto wallet/exchange",
+        `Send exact USDT equivalent of Rs.${order.total.toLocaleString()} (TRC-20)`,
+        "Use the wallet address provided below",
+        `Include reference: ${order.orderNumber}`,
+        "Send transaction hash to our WhatsApp",
+        "Payment will be confirmed within 1 hour",
+      ],
+      walletAddresses: {
+        usdt_trc20: "TQn9Y2khEsLJW1ChVWFMSMeRDow5oREqjK",
+        reference: order.orderNumber,
+      },
+    },
   }
 
-  return instructions[paymentMethod] || null
+  // Map common synonyms/variants to our lowercase keys
+  const alias = {
+    easypaisa: "easypaisa", // Correct spelling
+    "easy-paisa": "easypaisa",
+    "easy paisa": "easypaisa",
+    jazzcash: "jazzcash",
+    "jazz cash": "jazzcash",
+    "bank transfer": "bank transfer",
+    bank: "bank transfer",
+    crypto: "crypto",
+    bitcoin: "crypto",
+    ethereum: "crypto",
+    usdt: "usdt (trc-20)",
+    "usdt (trc-20)": "usdt (trc-20)",
+  }
+
+  const key = alias[method] || method
+  return instructions[key] || null
 }
 
 const sendEmail = async (type, to, subject, data) => {

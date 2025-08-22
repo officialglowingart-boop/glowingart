@@ -14,21 +14,29 @@ router.post("/", async (req, res) => {
     
     const { customerInfo, items, subtotal, shippingProtection, discountCode, total, paymentMethod, notes } = req.body
 
+    // Helpers to sanitize common mobile autofill artifacts (zero-width chars, NBSP, etc.)
+    const stripInvisibles = (str = "") =>
+      String(str)
+        .replace(/[\u200B-\u200D\uFEFF]/g, "") // zero-width characters
+        .replace(/\u00A0/g, " ") // non-breaking space -> normal space
+        .replace(/\s+/g, " ") // collapse spaces
+        .trim()
+
     // Normalize customer fields to prevent mobile autofill whitespace/issues
     const normalizedCustomer = {
       ...customerInfo,
-      firstName: (customerInfo?.firstName || "").trim(),
-      lastName: (customerInfo?.lastName || "").trim(),
-      email: (customerInfo?.email || "").trim().toLowerCase(),
-      phone: (customerInfo?.phone || "").trim(),
-      address: (customerInfo?.address || "").trim(),
-      city: (customerInfo?.city || "").trim(),
-      postalCode: (customerInfo?.postalCode || "").trim(),
-      country: (customerInfo?.country || "").trim(),
+      firstName: stripInvisibles(customerInfo?.firstName),
+      lastName: stripInvisibles(customerInfo?.lastName),
+      email: stripInvisibles(customerInfo?.email).toLowerCase(),
+      phone: stripInvisibles(customerInfo?.phone).replace(/\s+/g, ""),
+      address: stripInvisibles(customerInfo?.address),
+      city: stripInvisibles(customerInfo?.city),
+      postalCode: stripInvisibles(customerInfo?.postalCode),
+      country: stripInvisibles(customerInfo?.country),
     }
 
     // Basic email validation to avoid nodemailer errors
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
     if (!normalizedCustomer.email || !emailRegex.test(normalizedCustomer.email)) {
       return res.status(400).json({ message: "Please provide a valid email address" })
     }
