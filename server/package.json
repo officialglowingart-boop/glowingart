@@ -1,7 +1,7 @@
 {
   "name": "glowing-gallery-server",
   "version": "1.0.0",
-  "description": "Backend server for Glowing Gallery e-commerce platform",
+  "description": "Backend server for Glowing Art e-commerce platform",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

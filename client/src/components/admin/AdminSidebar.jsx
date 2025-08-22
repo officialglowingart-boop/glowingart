@@ -72,7 +72,7 @@ const AdminSidebar = ({ activeSection, setActiveSection }) => {
           {!collapsed && (
             <div>
               <h1 className="text-xl font-bold text-yellow-400" style={{ fontFamily: "serif", fontStyle: "italic" }}>
-                Glowing Gallery
+              Glowing Art
               </h1>
               <p className="text-xs text-gray-400">Admin Panel</p>
             </div>

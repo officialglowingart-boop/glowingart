@@ -151,7 +151,7 @@ const Header = () => {
               <Link to="/" className="no-underline flex-shrink-0">
                 <img
                   src="https://res.cloudinary.com/dnhc1pquv/image/upload/v1755152549/glowing_art_wfvdht.png"
-                  alt="Glowing Gallery"
+                  alt="Glowing Art"
                   className="h-12 sm:h-16 md:h-20"
                 />
               </Link>

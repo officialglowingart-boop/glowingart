@@ -9,7 +9,7 @@ const Footer = () => {
           {/* Logo & Description */}
           <div className="col-span-1 md:col-span-2">
             <h3 className="text-xl font-bold mb-4" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
-              Glowing Gallery
+              Glowing Art
             </h3>
             <p className="text-gray-300 mb-4" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
               Discover our exclusive collection of beautiful digital art pieces
@@ -63,7 +63,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="border-t border-gray-700 mt-8 pt-8 text-center">
           <p className="text-gray-300" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
-            © 2025 Glowing Gallery. All rights reserved.
+            © 2025 Glowing Art. All rights reserved.
           </p>
         </div>
       </div>
