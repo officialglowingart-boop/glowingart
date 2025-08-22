@@ -31,9 +31,17 @@ const Checkout = () => {
   const [notes, setNotes] = useState("")
 
   const handleInputChange = (e) => {
+    const { name, value } = e.target
+    // Normalize some fields that commonly break on mobile autofill
+    const normalized =
+      name === 'email' ? value.trim().toLowerCase() :
+      name === 'firstName' || name === 'lastName' || name === 'city' || name === 'country' ? value.trim() :
+      name === 'phone' ? value.replace(/\s+/g, '').trim() :
+      value
+
     setCustomerInfo({
       ...customerInfo,
-      [e.target.name]: e.target.value,
+      [name]: normalized,
     })
   }
 

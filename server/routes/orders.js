@@ -84,16 +84,20 @@ router.post("/", async (req, res) => {
     await order.save()
     await order.populate("items.product")
 
-    // Send confirmation notifications (don't block response)
-    ;(async () => {
-      try {
-        console.log("📧 Triggering order confirmation for:", order.orderNumber, normalizedCustomer.email)
-        await sendOrderConfirmation(order)
-        console.log("📧 Order confirmation sent for:", order.orderNumber)
-      } catch (notificationError) {
-        console.error("Notification error (order:", order.orderNumber, "):", notificationError?.message || notificationError)
-      }
-    })()
+    // Send confirmation notifications BEFORE responding to avoid serverless freeze dropping tasks
+    try {
+      console.log("📧 Triggering order confirmation for:", order.orderNumber, normalizedCustomer.email)
+      await sendOrderConfirmation(order)
+      console.log("📧 Order confirmation sent for:", order.orderNumber)
+    } catch (notificationError) {
+      console.error(
+        "Notification error (order:",
+        order.orderNumber,
+        "):",
+        notificationError?.message || notificationError,
+      )
+      // Do not fail order creation if notifications fail
+    }
 
     res.status(201).json({
       message: "Order placed successfully",
