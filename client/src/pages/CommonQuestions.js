@@ -35,7 +35,7 @@ const CommonQuestions = () => {
     <div className="min-h-screen font-serif" style={{ backgroundColor: "#dfdfd8" }}>
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 py-12">
-        <h1 className="text-5xl font-bold text-center text-gray-900 mb-12 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
+        <h1 className="sm:text-5xl text-3xl font-bold text-center text-gray-900 mb-12 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
           Common Questions
         </h1>
 
@@ -86,7 +86,7 @@ const CommonQuestions = () => {
         </div>
 
         {/* Newsletter Section */}
-        <div className="text-center bg-white rounded-lg p-8 shadow-sm" style={{ backgroundColor: "#dfdfd8" }}>
+        <div className="text-center bg-white rounded-lg sm:p-8 shadow-sm" style={{ backgroundColor: "#dfdfd8" }}>
           <h2 className="text-3xl font-bold text-gray-800 mb-4 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
             Stay up to Date!
           </h2>

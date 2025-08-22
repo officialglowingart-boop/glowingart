@@ -4,12 +4,12 @@ const PrivacyPolicy = () => {
   return (
     <div className="min-h-screen font-serif" style={{ backgroundColor: "#dfdfd8", fontFamily: 'Times, "Times New Roman", serif' }}>
       {/* Main Content */}
-      <div className="max-w-5xl mx-auto px-4 py-12" >
-        <h1 className="text-5xl font-bold text-center text-gray-900 mb-12 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
+      <div className="max-w-5xl mx-auto px-4 py-4" >
+        <h1 className="sm:text-5xl text-3xl font-bold text-center text-gray-900 sm:mb-12 mb-6 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
           Privacy Policy
         </h1>
 
-        <div className="bg-white  p-8   space-y-6" style={{ backgroundColor: "#dfdfd8"}}>
+        <div className="bg-white  sm:p-8   space-y-6" style={{ backgroundColor: "#dfdfd8"}}>
           <div className="text-gray-700 leading-relaxed space-y-4" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
             
             <section>
@@ -140,7 +140,7 @@ const PrivacyPolicy = () => {
         </div>
 
         {/* Newsletter Section */}
-        <div className="text-center bg-white rounded-lg p-8 shadow-sm mt-8" style={{ backgroundColor: "#dfdfd8"}}>
+        <div className="text-center bg-white rounded-lg sm:p-8 shadow-sm mt-8" style={{ backgroundColor: "#dfdfd8"}}>
           <h2 className="text-3xl font-bold text-gray-800 mb-4 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
             Stay up to Date!
           </h2>

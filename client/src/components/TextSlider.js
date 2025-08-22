@@ -5,6 +5,7 @@ const TextSlider = () => {
     "A   Brand   By   Mr ~FZ 🤓 ",
     "50,000+ Happy Customers ⭐⭐⭐⭐⭐",
     "Premium Quality Art & Crafts 🎨",
+    "A  Created   By   Mr ~MS 🤓 ",
     "Fast Delivery All Across Pakistan 🚚",
     "100% Satisfaction Guaranteed ✅"
   ];
