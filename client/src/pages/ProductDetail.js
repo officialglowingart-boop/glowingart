@@ -122,7 +122,7 @@ const ProductDetail = () => {
     if (!total || total < 2) return
     const id = setInterval(() => {
       setSelectedImageIndex((idx) => (idx + 1) % total)
-    }, 5000)
+    }, 3000)
     return () => clearInterval(id)
   }, [isImageModalOpen, product?.images])
 
