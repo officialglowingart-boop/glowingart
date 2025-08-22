@@ -286,7 +286,7 @@ const PaymentDetails = () => {
                     replace: true,
                   })
                 }
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg"
+                className="bg-[#333] text-white px-6 py-2 rounded-lg"
               >
                 Confirm Order
               </button>
