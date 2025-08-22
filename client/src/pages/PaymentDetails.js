@@ -305,7 +305,19 @@ const PaymentDetails = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 ">
-      <div className="max-w-7xl mx-auto px-4">
+      {/* Top centered logo */}
+      <div className="max-w-7xl mx-auto px-4 py-3">
+        <div className="flex justify-center">
+          <a href="/" aria-label="Glowing-Art home">
+            <img
+              src="https://res.cloudinary.com/dnhc1pquv/image/upload/v1755152549/glowing_art_wfvdht.png"
+              alt="Glowing-Art"
+              className="h-12 sm:h-14 md:h-16"
+            />
+          </a>
+        </div>
+      </div>
+      <div className="max-w-7xl mx-auto sm:px-4  ">
         <div className="rounded-lg  overflow-hidden">
           {/* Header */}
           <div className="from-yellow-600 to-yellow-700 text-black
@@ -369,8 +381,8 @@ const PaymentDetails = () => {
                       ))}
                     </div>
 
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <p className="text-blue-800 text-sm">{paymentDetails.additionalInfo}</p>
+                    <div className="bg-[#333] p-4 rounded-lg">
+                      <p className="text-white text-sm">{paymentDetails.additionalInfo}</p>
                     </div>
                   </div>
                 </div>
@@ -401,7 +413,7 @@ const PaymentDetails = () => {
               </div>
 
               {/* Payment Confirmation Form */}
-              <div className="mt-6 bg-gray-50 p-6 rounded-lg">
+              <div className="mt-6 bg-gray-50 sm:p-6 rounded-lg">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Confirm Your Payment</h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
