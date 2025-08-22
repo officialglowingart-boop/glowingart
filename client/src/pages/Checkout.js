@@ -467,7 +467,7 @@ const Checkout = () => {
           </div>
 
           <div>
-            <div className="p-6">
+            <div className="p-2 sm:p-6">
               <h2 className="text-2xl font-semibold text-gray-800 mb-6">Order Summary</h2>
 
               <div className="mb-6">
@@ -512,7 +512,7 @@ const Checkout = () => {
                 ))}
               </div>
 
-              <div className="mb-6 p-4  rounded-lg">
+              <div className="mb-6 p-2 sm:p-4  rounded-lg">
                 <h4 className="font-semibold text-gray-800 mb-3">Discount Code</h4>
                 {discountCode.appliedCoupon ? (
                   <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -590,7 +590,7 @@ const Checkout = () => {
                 </div>
               </div>
 
-              <div className="mt-8 p-4 rounded-lg">
+              <div className="sm:mt-8 mt-3 p-1 sm:p-4 rounded-lg">
                 <div className="grid gap-4">
                   {benefits.map(({ Icon, title, text }) => (
                     <div key={title} className="flex items-center gap-3">
