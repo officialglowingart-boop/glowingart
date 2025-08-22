@@ -125,6 +125,8 @@ const OrderManagement = () => {
         return { bg: "#d4edda", color: "#155724" }
       case "shipped":
         return { bg: "#d1ecf1", color: "#0c5460" }
+      case "enroute":
+        return { bg: "#e2e3e5", color: "#383d41" }
       case "confirmed":
         return { bg: "#d4edda", color: "#155724" }
       case "cancelled":
@@ -184,6 +186,7 @@ const OrderManagement = () => {
             <option value="processing">Processing</option>
             <option value="confirmed">Confirmed</option>
             <option value="shipped">Shipped</option>
+            <option value="enroute">En Route</option>
             <option value="delivered">Delivered</option>
             <option value="cancelled">Cancelled</option>
           </select>
@@ -509,6 +512,7 @@ const OrderManagement = () => {
                       <option value="processing">Processing</option>
                       <option value="confirmed">Confirmed</option>
                       <option value="shipped">Shipped</option>
+                      <option value="enroute">En Route</option>
                       <option value="delivered">Delivered</option>
                       <option value="cancelled">Cancelled</option>
                     </select>

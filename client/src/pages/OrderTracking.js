@@ -47,28 +47,28 @@ const OrderTracking = () => {
 
   const getStatusSteps = (currentStatus) => {
     const steps = [
-      { 
-        key: "processing", 
-        label: "Order Processed", 
-  icon: <FaIndustry aria-label="Order Processed" />,
+      {
+        key: "processing",
+        label: "Order Processed",
+        icon: <FaIndustry aria-label="Order Processed" />,
         description: "Order is being prepared"
       },
-      { 
-        key: "shipped", 
-        label: "Order Shipped", 
-  icon: <FaBox aria-label="Order Shipped" />,
+      {
+        key: "shipped",
+        label: "Order Shipped",
+        icon: <FaBox aria-label="Order Shipped" />,
         description: "Package is on its way"
       },
-      { 
-        key: "enroute", 
-        label: "Order En Route", 
-  icon: <FaTruck aria-label="Order En Route" />,
+      {
+        key: "enroute",
+        label: "Order En Route",
+        icon: <FaTruck aria-label="Order En Route" />,
         description: "Out for delivery"
       },
-      { 
-        key: "delivered", 
-        label: "Order Arrived", 
-  icon: <FaHome aria-label="Order Arrived" />,
+      {
+        key: "delivered",
+        label: "Order Arrived",
+        icon: <FaHome aria-label="Order Arrived" />,
         description: "Successfully delivered"
       },
     ]
@@ -86,9 +86,9 @@ const OrderTracking = () => {
   const cardStyle = {
     backgroundColor: "#dfdfd8",
     borderRadius: "8px",
-    padding: "1.5rem",
+    padding: "10px",
+    marginTop: "13px",
     marginBottom: "2rem",
-    border: "1px solid #c0c0b8"
   }
 
   return (
@@ -134,8 +134,8 @@ const OrderTracking = () => {
                   {error}
                 </div>
               )}
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="w-full bg-gray-800 hover:bg-gray-700 disabled:bg-gray-400 text-white py-3 px-6 rounded-lg font-semibold transition duration-200 font-serif"
                 style={{ fontFamily: 'Times, "Times New Roman", serif' }}
                 disabled={loading}
@@ -149,8 +149,8 @@ const OrderTracking = () => {
         {order && (
           <div>
             {/* Modern Order Status Card */}
-            <div className=" rounded-2xl p-8  mb-8" style={{ backgroundColor: '#dfdfd8' }}>
-              <div className="text-gray-800">
+            <div className=" rounded-2xl sm:p-8 p-2  mb-8" style={{ backgroundColor: '#dfdfd8' }}>
+              <div className="text-black">
                 {/* Header */}
                 <div className="flex justify-between items-start mb-8">
                   <div>
@@ -172,11 +172,10 @@ const OrderTracking = () => {
                         {/* Circle */}
                         <div className="flex justify-center">
                           <div
-                            className={`w-12 h-12 rounded-full flex items-center justify-center z-10 relative ${
-                              step.completed 
-                                ? 'bg-green-600 text-white' 
+                            className={`w-12 h-12 rounded-full flex items-center justify-center z-10 relative ${step.completed
+                                ? 'bg-green-600 text-white'
                                 : 'bg-gray-300 text-gray-500'
-                            }`}
+                              }`}
                           >
                             {step.completed ? (
                               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
@@ -187,13 +186,12 @@ const OrderTracking = () => {
                             )}
                           </div>
                         </div>
-                        
+
                         {/* Progress Line */}
                         {index < getStatusSteps(order.orderStatus).length - 1 && (
-                          <div 
-                            className={`absolute top-6 left-1/2 w-full h-1 -translate-y-1/2 ${
-                              step.completed ? 'bg-white' : 'bg-gray-300'
-                            }`}
+                          <div
+                            className={`absolute top-6 left-1/2 w-full h-1 -translate-y-1/2 ${step.completed ? 'bg-white' : 'bg-gray-300'
+                              }`}
                             style={{ zIndex: 1 }}
                           />
                         )}
@@ -227,7 +225,7 @@ const OrderTracking = () => {
                 </div>
               </div>
             </div>
-
+            <hr style={{ border: "1px solid white" }} />
             {/* Order Details */}
             <div style={cardStyle}>
               <h3 className="text-xl font-bold text-gray-800 mb-4 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
@@ -253,7 +251,7 @@ const OrderTracking = () => {
                   <strong>Payment Status:</strong>
                   {/* <br /> */}
                   <span
-                  className="font-bold"
+                    className="font-bold"
                     style={{
                       paddingLeft: "15px",
                       paddingRight: "15px",
@@ -271,7 +269,7 @@ const OrderTracking = () => {
                 </div>
               </div>
             </div>
-
+            <hr style={{ border: "1px solid white" }} />
             {/* Shipping Information */}
             <div style={cardStyle}>
               <h3 className="text-xl font-bold text-gray-800 mb-4 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
@@ -298,7 +296,7 @@ const OrderTracking = () => {
                 </div>
               </div>
             </div>
-
+            <hr style={{ border: "1px solid white" }} />
             {/* Order Items */}
             <div style={cardStyle}>
               <h3 className="text-xl font-bold text-gray-800 mb-4 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
