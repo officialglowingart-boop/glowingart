@@ -42,7 +42,7 @@ const PaymentSuccess = () => {
 
   return (
     <div className="min-h-screen bg-[#dfdfd8] from-emerald-50 to-emerald-100 flex items-center justify-center p-4">
-      <div className="bg-white/90 backdrop-blur rounded-2xl shadow-xl max-w-lg w-full p-8 relative">
+      <div className="bg-white/90 backdrop-blur rounded-2xl shadow-xl max-w-lg w-full sm:p-5 p-2  relative">
         {/* Close button */}
         <button
           aria-label="Close"
@@ -53,7 +53,7 @@ const PaymentSuccess = () => {
         </button>
 
         {/* Icon */}
-        <div className="mx-auto mb-6 w-20 h-20 rounded-full bg-emerald-500 shadow-lg flex items-center justify-center">
+        <div className="mx-auto mb-6 w-20 h-20 rounded-full bg-emerald-500 shadow-lg flex items-center justify-center m-7">
           <span className="text-white text-4xl">✓</span>
         </div>
 
@@ -91,7 +91,7 @@ const PaymentSuccess = () => {
         )}
 
         {/* Order details */}
-        <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg sm:p-4 p-3">
           <h2 className="text-sm font-semibold text-gray-800 mb-3">Order Details</h2>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
