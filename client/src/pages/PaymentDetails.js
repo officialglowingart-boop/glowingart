@@ -304,7 +304,7 @@ const PaymentDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 ">
+    <div className="min-h-screen bg-gray-50 py-8 overflow-x-hidden ">
       {/* Top centered logo */}
       <div className="max-w-7xl mx-auto px-4 py-3">
         <div className="flex justify-center">
@@ -374,9 +374,11 @@ const PaymentDetails = () => {
 
                     <div className="bg-gray-50 p-4 rounded-lg">
                       {Object.entries(paymentDetails.details).map(([key, value]) => (
-                        <div key={key} className="flex justify-between py-2 border-b border-gray-200 last:border-b-0">
-                          <span className="font-medium text-gray-700">{key}:</span>
-                          <span className="text-gray-900 font-mono">{value}</span>
+                        <div key={key} className="flex items-start justify-between py-2 border-b border-gray-200 last:border-b-0">
+                          <span className="font-medium text-gray-700 mr-3 flex-shrink-0">{key}:</span>
+                          <span className="text-gray-900 font-mono break-all sm:break-normal max-w-[65%] sm:max-w-none text-right">
+                            {value}
+                          </span>
                         </div>
                       ))}
                     </div>
