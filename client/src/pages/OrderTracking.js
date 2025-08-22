@@ -152,62 +152,102 @@ const OrderTracking = () => {
             <div className=" rounded-2xl sm:p-8 p-2  mb-8" style={{ backgroundColor: '#dfdfd8' }}>
               <div className="text-black">
                 {/* Header */}
-                <div className="flex justify-between items-start mb-8">
+                <div className="flex flex-col sm:flex-row sm:justify-between items-start mb-8 gap-1">
                   <div>
                     <h2 className="text-xl font-bold mb-2">
-                      ORDER <span className="">#{order.orderNumber}</span>
+                      ORDER ID #
+                      <br/>
+                       <span className="">{order.orderNumber}</span>
                     </h2>
                   </div>
-                  <div className="text-right">
+                  <div className="w-full sm:w-auto text-left sm:text-right mt-1 sm:mt-0">
                     <p className="text-sm opacity-90">Expected Arrival {new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}</p>
                     <p className="text-xs opacity-75">USPS {order.trackingNumber || '23409456724242342898'}</p>
                   </div>
                 </div>
 
-                {/* Progress Bar */}
-                <div className="relative mb-8">
-                  <div className="flex items-center justify-between relative">
-                    {getStatusSteps(order.orderStatus).map((step, index) => (
-                      <div key={step.key} className="flex-1 relative">
-                        {/* Circle */}
-                        <div className="flex justify-center">
-                          <div
-                            className={`w-12 h-12 rounded-full flex items-center justify-center z-10 relative ${step.completed
-                                ? 'bg-green-600 text-white'
-                                : 'bg-gray-300 text-gray-500'
-                              }`}
-                          >
-                            {step.completed ? (
-                              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            ) : (
-                              <div className="w-4 h-4 rounded-full bg-current opacity-50"></div>
-                            )}
+                {/* Desktop: progress bar + labels */}
+                <div className="hidden sm:block">
+                  {/* Progress Bar */}
+                  <div className="relative mb-8">
+                    <div className="flex items-center justify-between relative">
+                      {getStatusSteps(order.orderStatus).map((step, index) => (
+                        <div key={step.key} className="flex-1 relative">
+                          {/* Circle */}
+                          <div className="flex justify-center">
+                            <div
+                              className={`w-12 h-12 rounded-full flex items-center justify-center z-10 relative ${step.completed
+                                  ? 'bg-green-600 text-white'
+                                  : 'bg-gray-300 text-gray-500'
+                                }`}
+                            >
+                              {step.completed ? (
+                                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              ) : (
+                                <div className="w-4 h-4 rounded-full bg-current opacity-50"></div>
+                              )}
+                            </div>
                           </div>
-                        </div>
 
-                        {/* Progress Line */}
-                        {index < getStatusSteps(order.orderStatus).length - 1 && (
-                          <div
-                            className={`absolute top-6 left-1/2 w-full h-1 -translate-y-1/2 ${step.completed ? 'bg-white' : 'bg-gray-300'
-                              }`}
-                            style={{ zIndex: 1 }}
-                          />
-                        )}
+                          {/* Progress Line */}
+                          {index < getStatusSteps(order.orderStatus).length - 1 && (
+                            <div
+                              className={`absolute top-6 left-1/2 w-full h-1 -translate-y-1/2 ${step.completed ? 'bg-white' : 'bg-gray-300'
+                                }`}
+                              style={{ zIndex: 1 }}
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Status Labels */}
+                  <div className="grid grid-cols-4 gap-4 items-start">
+                    {getStatusSteps(order.orderStatus).map((step) => (
+                      <div key={step.key} className="flex flex-col items-center justify-start text-center">
+                        <div className={`text-2xl mb-1 ${step.completed ? 'text-gray-800' : 'text-gray-500'}`}>{step.icon}</div>
+                        <div className={`text-sm font-medium ${step.completed ? 'text-gray-800' : 'text-gray-500'}`}>{step.label}</div>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Status Labels */}
-                <div className="grid grid-cols-4 gap-4 items-start">
-                  {getStatusSteps(order.orderStatus).map((step) => (
-                    <div key={step.key} className="flex flex-col items-center justify-start text-center">
-                      <div className={`text-2xl mb-1 ${step.completed ? 'text-gray-800' : 'text-gray-500'}`}>{step.icon}</div>
-                      <div className={`text-sm font-medium ${step.completed ? 'text-gray-800' : 'text-gray-500'}`}>{step.label}</div>
-                    </div>
-                  ))}
+                {/* Mobile: vertical list with circle on left, center line, and icon+label on right */}
+                <div className="sm:hidden">
+                  <div className="space-y-3">
+                    {getStatusSteps(order.orderStatus).map((step) => (
+                      <div key={step.key} className="flex items-center">
+                        {/* Left tick circle */}
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center ${step.completed ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-500'}`}
+                        >
+                          {step.completed ? (
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          ) : (
+                            <div className="w-2.5 h-2.5 rounded-full bg-current opacity-60"></div>
+                          )}
+                        </div>
+
+                        {/* Center connecting line */}
+                        <div className={`mx-3 h-px flex-1 bg-white`} />
+
+                        {/* Right icon + label */}
+                        <div className="flex items-center justify-end min-w-0">
+                          <span className={`mr-2 text-lg ${step.completed ? 'text-gray-800' : 'text-gray-500'}`}>
+                            {step.icon}
+                          </span>
+                          <span className={`text-sm font-medium ${step.completed ? 'text-gray-800' : 'text-gray-500'}`}>
+                            {step.label}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Track Again Button */}
