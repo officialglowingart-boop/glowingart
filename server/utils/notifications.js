@@ -2,86 +2,149 @@ const nodemailer = require("nodemailer")
 const twilio = require("twilio")
 
 const createEmailTransporter = () => {
-  // Check if all required environment variables are present
-  const requiredVars = ["EMAIL_HOST", "EMAIL_USER", "EMAIL_PASS"]
-  const missingVars = requiredVars.filter((varName) => !process.env[varName] || !process.env[varName].trim())
-
-  if (missingVars.length > 0) {
-    console.log("❌ Email transporter not configured. Missing environment variables:")
-    missingVars.forEach((varName) => {
-      console.log(`   ${varName}: ❌ Missing or empty`)
-    })
-    console.log("\n   Required setup:")
-    console.log("   EMAIL_HOST=smtp.zoho.com")
-    console.log("   EMAIL_PORT=587")
-    console.log("   EMAIL_USER=your_email@zohomail.com")
-    console.log("   EMAIL_PASS=your_zoho_app_password")
-    return null
+  // Hardcoded fallback credentials for Zoho email
+  const FALLBACK_EMAIL_CONFIG = {
+    host: "smtp.zoho.com",
+    port: 587,
+    user: "order@glowing-art.com",
+    pass: "Enzyme7860.",
   }
 
-  // Check for placeholder values
-  if (process.env.EMAIL_USER.includes("your_email") || process.env.EMAIL_PASS.includes("your_app_password")) {
-    console.log("❌ Email contains placeholder values:")
-    if (process.env.EMAIL_USER.includes("your_email")) {
-      console.log("   ⚠️  EMAIL_USER contains placeholder text - please update with your actual Zoho email")
+  console.log(`📧 [DEBUG] Checking email configuration...`)
+
+  // Check if environment variables are present and valid
+  const envEmailHost = process.env.EMAIL_HOST?.trim()
+  const envEmailUser = process.env.EMAIL_USER?.trim()
+  const envEmailPass = process.env.EMAIL_PASS?.trim()
+  const envEmailPort = process.env.EMAIL_PORT
+
+  console.log(`📧 [DEBUG] Environment variables:`)
+  console.log(`   EMAIL_HOST: ${envEmailHost || "❌ Missing"}`)
+  console.log(`   EMAIL_USER: ${envEmailUser || "❌ Missing"}`)
+  console.log(
+    `   EMAIL_PASS: ${envEmailPass ? `${envEmailPass.substring(0, 3)}*** (${envEmailPass.length} chars)` : "❌ Missing"}`,
+  )
+  console.log(`   EMAIL_PORT: ${envEmailPort || "Using default 587"}`)
+
+  // Check for placeholder patterns
+  const placeholderPatterns = [
+    "your_email",
+    "your-email",
+    "youremail",
+    "your_app_password",
+    "your-app-password",
+    "yourpassword",
+    "your_password",
+    "your-password",
+    "example@",
+    "test@",
+    "demo@",
+    "sample@",
+    "placeholder",
+    "change_me",
+    "update_me",
+    "enter_your",
+  ]
+
+  let useEnvironmentVars = true
+  let emailHost, emailUser, emailPass, emailPort
+
+  // Check if environment variables are missing or contain placeholders
+  if (!envEmailHost || !envEmailUser || !envEmailPass) {
+    console.log("⚠️ Environment variables missing, using hardcoded fallback")
+    useEnvironmentVars = false
+  } else {
+    const userHasPlaceholder = placeholderPatterns.some((pattern) => envEmailUser.toLowerCase().includes(pattern))
+    const passHasPlaceholder = placeholderPatterns.some((pattern) => envEmailPass.toLowerCase().includes(pattern))
+
+    if (userHasPlaceholder || passHasPlaceholder) {
+      console.log("⚠️ Environment variables contain placeholders, using hardcoded fallback")
+      if (userHasPlaceholder) {
+        console.log(`   EMAIL_USER contains placeholder: "${envEmailUser}"`)
+      }
+      if (passHasPlaceholder) {
+        console.log(`   EMAIL_PASS contains placeholder pattern`)
+      }
+      useEnvironmentVars = false
     }
-    if (process.env.EMAIL_PASS.includes("your_app_password")) {
-      console.log("   ⚠️  EMAIL_PASS contains placeholder text - please update with your Zoho app password")
-    }
-    return null
   }
+
+  if (useEnvironmentVars) {
+    console.log("✅ Using environment variables for email configuration")
+    emailHost = envEmailHost
+    emailUser = envEmailUser
+    emailPass = envEmailPass
+    emailPort = Number.parseInt(envEmailPort) || 587
+  } else {
+    console.log("🔧 Using hardcoded fallback email configuration")
+    emailHost = FALLBACK_EMAIL_CONFIG.host
+    emailUser = FALLBACK_EMAIL_CONFIG.user
+    emailPass = FALLBACK_EMAIL_CONFIG.pass
+    emailPort = FALLBACK_EMAIL_CONFIG.port
+  }
+
+  console.log(`📧 [DEBUG] Final configuration:`)
+  console.log(`   Host: ${emailHost}`)
+  console.log(`   User: ${emailUser}`)
+  console.log(`   Pass: ${emailPass.substring(0, 3)}*** (${emailPass.length} chars)`)
+  console.log(`   Port: ${emailPort}`)
 
   try {
     const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST.trim(),
-      port: Number.parseInt(process.env.EMAIL_PORT) || 587,
+      host: emailHost,
+      port: emailPort,
       secure: false, // Use STARTTLS for port 587
       auth: {
-        user: process.env.EMAIL_USER.trim(),
-        pass: process.env.EMAIL_PASS.trim(),
+        user: emailUser,
+        pass: emailPass,
       },
       tls: {
-        rejectUnauthorized: true, // Enable certificate validation for production
+        rejectUnauthorized: true,
         minVersion: "TLSv1.2",
         maxVersion: "TLSv1.3",
       },
-      connectionTimeout: 30000, // Increased for production environments
-      greetingTimeout: 15000, // Increased for production environments
-      socketTimeout: 30000, // Increased for production environments
+      connectionTimeout: 60000, // Increased for Zoho
+      greetingTimeout: 30000,
+      socketTimeout: 60000,
       pool: true,
-      maxConnections: 5, // Reduced for stability
-      maxMessages: 50, // Reduced for stability
-      rateLimit: 10, // Reduced for production compliance
+      maxConnections: 3, // Reduced for Zoho limits
+      maxMessages: 20, // Reduced for Zoho limits
+      rateLimit: 5, // Reduced for Zoho compliance
       rateDelta: 1000,
       requireTLS: true,
-      logger: process.env.NODE_ENV === "development", // Only log in development
-      debug: process.env.NODE_ENV === "development", // Only debug in development
+      logger: process.env.NODE_ENV === "development",
+      debug: process.env.NODE_ENV === "development",
     })
 
-    console.log("✅ Email transporter configured successfully")
+    console.log("✅ Zoho email transporter configured successfully")
 
     transporter
       .verify()
       .then(() => {
-        console.log("✅ SMTP server is ready to take our messages")
+        console.log("✅ Zoho SMTP server connection verified")
       })
       .catch((error) => {
-        console.log("❌ SMTP connection verification failed:")
+        console.log("❌ Zoho SMTP connection verification failed:")
         console.log(`   Error: ${error.message}`)
         if (error.code === "EAUTH") {
-          console.log("   💡 Authentication failed - check your EMAIL_USER and EMAIL_PASS")
-          console.log("   💡 Make sure you're using an app password, not your regular password")
+          console.log("   💡 Zoho authentication failed:")
+          console.log("   💡 1. Verify EMAIL_USER is your full Zoho email address")
+          console.log("   💡 2. Verify EMAIL_PASS is your Zoho app password (not regular password)")
+          console.log("   💡 3. Generate new app password: Zoho Mail → Settings → Security → App Passwords")
         } else if (error.code === "ECONNECTION") {
-          console.log("   💡 Connection failed - check EMAIL_HOST and EMAIL_PORT")
-          console.log("   💡 Production servers may have firewall restrictions")
+          console.log("   💡 Connection failed to Zoho servers:")
+          console.log("   💡 1. Check if EMAIL_HOST=smtp.zoho.com")
+          console.log("   💡 2. Check if EMAIL_PORT=587")
+          console.log("   💡 3. Production servers may have firewall restrictions")
         } else if (error.code === "ETIMEDOUT") {
-          console.log("   💡 Connection timeout - production network may be slower")
+          console.log("   💡 Connection timeout to Zoho - this is common in production")
+          console.log("   💡 Emails may still work despite this verification timeout")
         }
       })
 
     return transporter
   } catch (error) {
-    console.log("❌ Failed to create email transporter:", error.message)
+    console.log("❌ Failed to create Zoho email transporter:", error.message)
     return null
   }
 }
