@@ -309,6 +309,10 @@ const OrderManagement = () => {
               maxWidth: "800px",
               maxHeight: "90vh",
               overflowY: "auto",
+              backgroundColor: "white", // Added solid background for modal
+              boxShadow: "0 4px 32px rgba(0,0,0,0.18)",
+              borderRadius: "12px",
+              padding: "2rem"
             }}
           >
             <div
@@ -508,7 +512,7 @@ const OrderManagement = () => {
                 <div className="grid grid-cols-2" style={{ gap: "1rem", marginBottom: "1rem" }}>
                   <div>
                     <label>Order Status</label>
-                    <select name="orderStatus" defaultValue={selectedOrder.orderStatus} required>
+                    <select className="bg-gray-200" name="orderStatus" defaultValue={selectedOrder.orderStatus} required>
                       <option value="processing">Processing</option>
                       <option value="confirmed">Confirmed</option>
                       <option value="shipped">Shipped</option>
@@ -519,7 +523,7 @@ const OrderManagement = () => {
                   </div>
                   <div>
                     <label>Payment Status</label>
-                    <select name="paymentStatus" defaultValue={selectedOrder.paymentStatus} required>
+                    <select className="bg-gray-200" name="paymentStatus" defaultValue={selectedOrder.paymentStatus} required>
                       <option value="pending">Pending</option>
                       <option value="paid">Paid</option>
                       <option value="failed">Failed</option>
@@ -527,18 +531,20 @@ const OrderManagement = () => {
                     </select>
                   </div>
                 </div>
+                <br />
+                <br />
                 <div className="form-group">
                   <label>Notes (Optional)</label>
                   <textarea name="notes" rows="3" defaultValue={selectedOrder.notes} />
                 </div>
                 <div style={{ display: "flex", gap: "1rem" }}>
-                  <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+                  <button type="submit" className="btn btn-primary p-2 bg-[#333] text-white" style={{ flex: 1 }}>
                     Update Order
                   </button>
                   <button
                     type="button"
                     onClick={() => setSelectedOrder(null)}
-                    className="btn btn-secondary"
+                    className="btn btn-secondary bg-red-300 text-white p-2"
                     style={{ flex: 1 }}
                   >
                     Cancel
