@@ -60,6 +60,12 @@ const Checkout = () => {
     e.preventDefault()
     setLoading(true)
 
+    // Debug log: print email value before submitting
+    console.log("[DEBUG] Submitting order with email:", customerInfo.email)
+    if (window && window.alert) {
+      window.alert("[DEBUG] Email submitted: " + customerInfo.email)
+    }
+
     try {
       // Validate payment selection (especially for Online Payment tab)
       const onlineMethods = ["JazzCash", "EasyPaisa", "Bank Transfer", "USDT (TRC-20)"]
