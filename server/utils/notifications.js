@@ -347,7 +347,7 @@ const getEmailTemplate = (type, data) => {
                 ? `
               <div style="margin-top: 15px;">
                 <strong>Notes:</strong>
-                <p style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin: 5px 0;">${data.order.notes}</p>
+                <p style="margin: 5px 0; background: #f8f9fa; padding: 10px; border-radius: 4px;">${data.order.notes}</p>
               </div>
             `
                 : ""
@@ -790,16 +790,44 @@ const sendEmail = async (type, to, subject, data, retryCount = 0) => {
     const htmlContent = getEmailTemplate(type, data)
     console.log(`📧 [DEBUG] Email template generated, length: ${htmlContent.length} characters`)
 
+    const envEmailUser = process.env.EMAIL_USER?.trim()
+    const placeholderPatterns = [
+      "your_email",
+      "your-email",
+      "youremail",
+      "your_app_password",
+      "your-app-password",
+      "yourpassword",
+      "your_password",
+      "your-password",
+      "example@",
+      "test@",
+      "demo@",
+      "sample@",
+      "placeholder",
+      "change_me",
+      "update_me",
+      "enter_your",
+    ]
+
+    let senderEmail = envEmailUser
+    if (!envEmailUser || placeholderPatterns.some((pattern) => envEmailUser.toLowerCase().includes(pattern))) {
+      senderEmail = "order@glowing-art.com" // Use hardcoded fallback
+      console.log(`📧 [DEBUG] Using hardcoded sender email: ${senderEmail}`)
+    } else {
+      console.log(`📧 [DEBUG] Using environment sender email: ${senderEmail}`)
+    }
+
     const messageId = `<${Date.now()}-${Math.random().toString(36).substr(2, 9)}@${process.env.EMAIL_DOMAIN || "glowing-gallery.com"}>`
 
     const mailOptions = {
-      from: `"Glowing Gallery" <${process.env.EMAIL_USER}>`,
+      from: `"Glowing Gallery" <${senderEmail}>`, // Use determined sender email instead of process.env.EMAIL_USER
       to: to.trim(),
       subject,
       html: htmlContent,
       headers: {
         "Message-ID": messageId,
-        "Reply-To": process.env.EMAIL_USER,
+        "Reply-To": senderEmail, // Use same sender email for Reply-To
       },
       text: `
 Order Confirmation - ${data.order?.orderNumber || "N/A"}
@@ -814,7 +842,7 @@ Payment Method: ${data.order?.paymentMethod || "N/A"}
 
 Track your order: ${process.env.FRONTEND_URL || "http://localhost:3000"}/track/${data.order?.orderNumber || ""}
 
-Questions? Contact us at ${process.env.EMAIL_USER}
+Questions? Contact us at ${senderEmail}
 
 Thank you for choosing Glowing Gallery!
       `.trim(),
