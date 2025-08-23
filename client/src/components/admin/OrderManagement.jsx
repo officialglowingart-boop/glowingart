@@ -6,6 +6,8 @@ import { getAdminOrders, updateOrderStatus, getOrderDetails, confirmOrderPayment
 const OrderManagement = () => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [selectedOrders, setSelectedOrders] = useState([])
   const [showPaymentModal, setShowPaymentModal] = useState(false)
@@ -21,12 +23,14 @@ const OrderManagement = () => {
 
   useEffect(() => {
     fetchOrders()
-  }, [filters])
+  }, [filters, currentPage])
 
   const fetchOrders = async () => {
+    setLoading(true)
     try {
-      const response = await getAdminOrders(filters)
+      const response = await getAdminOrders({ ...filters, page: currentPage, limit: 10 })
       setOrders(response.orders)
+      setTotalPages(response.totalPages || 1)
     } catch (error) {
       console.error("Error fetching orders:", error)
     } finally {
@@ -533,6 +537,7 @@ const OrderManagement = () => {
                 </div>
                 <br />
                 <br />
+
                 <div className="form-group">
                   <label>Notes (Optional)</label>
                   <textarea name="notes" rows="3" defaultValue={selectedOrder.notes} />
@@ -654,6 +659,43 @@ const OrderManagement = () => {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination Controls */}
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", margin: "2rem 0" }}>
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            style={{
+              padding: "0.5rem 1rem",
+              marginRight: "1rem",
+              backgroundColor: currentPage === 1 ? "#ccc" : "#007bff",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: currentPage === 1 ? "not-allowed" : "pointer",
+            }}
+          >
+            Previous
+          </button>
+          <span style={{ fontWeight: "bold", fontSize: "1rem" }}>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            style={{
+              padding: "0.5rem 1rem",
+              marginLeft: "1rem",
+              backgroundColor: currentPage === totalPages ? "#ccc" : "#007bff",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+            }}
+          >
+            Next
+          </button>
         </div>
 
         {orders.length === 0 && (
