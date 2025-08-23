@@ -491,7 +491,6 @@ const sendOrderConfirmation = async (order, userAgent = "", requestSource = "") 
     const emailData = { order, paymentInstructions }
     const whatsappData = { order }
 
-    // <CHANGE> Remove mobile-specific async handling that may cause email failures
     // Send email synchronously to ensure it completes before response
     await sendEmail(
       "orderConfirmation",
@@ -500,7 +499,7 @@ const sendOrderConfirmation = async (order, userAgent = "", requestSource = "") 
       emailData,
     )
     console.log(`✅ Email sent successfully to ${order.customerInfo.email}`)
-    
+
     // Send WhatsApp asynchronously (can fail without affecting order)
     sendWhatsApp("orderConfirmation", order.customerInfo.phone, whatsappData)
       .then(() => {
@@ -512,7 +511,7 @@ const sendOrderConfirmation = async (order, userAgent = "", requestSource = "") 
 
     console.log(`Order confirmation sent for ${order.orderNumber}`)
     console.log(`📧 Order confirmation sent successfully for: ${order.orderNumber}`)
-    
+
     return { success: true, message: "Notifications sent successfully" }
   } catch (error) {
     console.error("Order confirmation error:", error)
@@ -699,7 +698,7 @@ const sendEmail = async (type, to, subject, data, retryCount = 0) => {
   try {
     const htmlContent = getEmailTemplate(type, data)
 
-    const messageId = `<${Date.now()}-${Math.random().toString(36).substr(2, 9)}@${process.env.EMAIL_DOMAIN || 'glowing-gallery.com'}>`
+    const messageId = `<${Date.now()}-${Math.random().toString(36).substr(2, 9)}@${process.env.EMAIL_DOMAIN || "glowing-gallery.com"}>`
 
     const mailOptions = {
       from: `"Glowing Gallery" <${process.env.EMAIL_USER}>`,
@@ -707,21 +706,9 @@ const sendEmail = async (type, to, subject, data, retryCount = 0) => {
       subject,
       html: htmlContent,
       headers: {
-        "X-Mailer": "Glowing Gallery Order System v2.0",
-        "X-Priority": "3",
-        "X-MSMail-Priority": "Normal",
-        Importance: "Normal",
-        "Reply-To": process.env.EMAIL_USER,
-        "Return-Path": process.env.EMAIL_USER,
-        "List-Unsubscribe": `<mailto:${process.env.EMAIL_USER}?subject=Unsubscribe>`,
         "Message-ID": messageId,
-        "X-Sender": process.env.EMAIL_USER,
-        "X-Original-Sender": process.env.EMAIL_USER,
-        Precedence: "bulk",
-        "Auto-Submitted": "auto-generated",
-        "X-Auto-Response-Suppress": "OOF, DR, RN, NRN, AutoReply",
-        // <CHANGE> Remove hardcoded Authentication-Results header that causes Gmail red question mark
-        // Let the mail server add proper authentication results
+        "Reply-To": process.env.EMAIL_USER,
+        "X-Mailer": "Glowing Gallery Order System v2.0",
       },
       text: `
 Order Confirmation - ${data.order?.orderNumber || "N/A"}
@@ -744,17 +731,6 @@ Thank you for choosing Glowing Gallery!
 
     console.log(`📧 Sending email to ${to}: ${subject}`)
     console.log(`📧 Attempt ${retryCount + 1}/4`)
-
-    // <CHANGE> Add connection verification before each send to ensure SMTP is ready
-    await new Promise((resolve, reject) => {
-      transporter.verify((error, success) => {
-        if (error) {
-          reject(new Error(`SMTP verification failed: ${error.message}`))
-        } else {
-          resolve(success)
-        }
-      })
-    })
 
     const info = await transporter.sendMail(mailOptions)
     console.log(`✅ Email sent successfully to ${to}. Message ID: ${info.messageId}`)
