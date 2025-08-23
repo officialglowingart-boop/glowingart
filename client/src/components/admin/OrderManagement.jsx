@@ -1838,7 +1838,6 @@
 
 
 
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -2122,9 +2121,9 @@ const OrderManagement = () => {
           border: "1px solid #e9ecef",
         }}
       >
-        {/* <h3 style={{ marginBottom: "1rem", color: "#333", fontSize: "1.1rem" }}>
+        <h3 style={{ marginBottom: "1rem", color: "#333", fontSize: "1.1rem" }}>
           Current Page Summary (Page {currentPage} of {totalPages} - Total: {totalOrders} orders)
-        </h3> */}
+        </h3>
         <div
           style={{
             display: "grid",
@@ -2317,6 +2316,10 @@ const OrderManagement = () => {
               maxWidth: "800px",
               maxHeight: "90vh",
               overflowY: "auto",
+              backgroundColor: "white",
+              padding: "2rem",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
             }}
           >
             <div
@@ -2527,7 +2530,8 @@ const OrderManagement = () => {
                 <div className="grid grid-cols-2" style={{ gap: "1rem", marginBottom: "1rem" }}>
                   <div>
                     <label>Order Status</label>
-                    <select name="orderStatus" defaultValue={selectedOrder.orderStatus} required>
+                    <br />
+                    <select className="bg-gray-300" name="orderStatus" defaultValue={selectedOrder.orderStatus} required>
                       <option value="processing">Processing</option>
                       <option value="confirmed">Confirmed</option>
                       <option value="shipped">Shipped</option>
@@ -2538,7 +2542,8 @@ const OrderManagement = () => {
                   </div>
                   <div>
                     <label>Payment Status</label>
-                    <select name="paymentStatus" defaultValue={selectedOrder.paymentStatus} required>
+                    <br />
+                    <select className="bg-gray-300" name="paymentStatus" defaultValue={selectedOrder.paymentStatus} required>
                       <option value="pending">Pending</option>
                       <option value="paid">Paid</option>
                       <option value="failed">Failed</option>
@@ -2551,13 +2556,13 @@ const OrderManagement = () => {
                   <textarea name="notes" rows="3" defaultValue={selectedOrder.notes} />
                 </div>
                 <div style={{ display: "flex", gap: "1rem" }}>
-                  <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+                  <button type="submit" className="btn btn-primary bg-[#333] p-3 text-white" style={{ flex: 1 }}>
                     Update Order
                   </button>
                   <button
                     type="button"
                     onClick={() => setSelectedOrder(null)}
-                    className="btn btn-secondary"
+                    className="btn btn-secondary bg-red-400 p-3 text-white"
                     style={{ flex: 1 }}
                   >
                     Cancel
