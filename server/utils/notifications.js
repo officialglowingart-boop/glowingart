@@ -41,27 +41,31 @@ const createEmailTransporter = () => {
         pass: process.env.EMAIL_PASS.trim(),
       },
       tls: {
-        rejectUnauthorized: false,
-        ciphers: "SSLv3",
-        minVersion: "TLSv1.2", // Added minimum TLS version for better security
+        rejectUnauthorized: true, // Enable certificate validation for production
+        minVersion: "TLSv1.2",
+        maxVersion: "TLSv1.3",
       },
-      connectionTimeout: 10000, // Reduced from 60s to 10s
-      greetingTimeout: 5000, // Reduced from 30s to 5s
-      socketTimeout: 10000, // Reduced from 60s to 10s
+      connectionTimeout: 30000, // Increased for production environments
+      greetingTimeout: 15000, // Increased for production environments
+      socketTimeout: 30000, // Increased for production environments
       pool: true,
-      maxConnections: 10, // Increased from 5 to 10 for better throughput
-      maxMessages: 100,
-      rateLimit: 20, // Increased from 10 to 20 emails per second
+      maxConnections: 5, // Reduced for stability
+      maxMessages: 50, // Reduced for stability
+      rateLimit: 10, // Reduced for production compliance
       rateDelta: 1000,
       requireTLS: true,
-      logger: false,
-      debug: false,
+      logger: process.env.NODE_ENV === "development", // Only log in development
+      debug: process.env.NODE_ENV === "development", // Only debug in development
     })
 
     console.log("✅ Email transporter configured successfully")
 
-    transporter.verify((error, success) => {
-      if (error) {
+    transporter
+      .verify()
+      .then(() => {
+        console.log("✅ SMTP server is ready to take our messages")
+      })
+      .catch((error) => {
         console.log("❌ SMTP connection verification failed:")
         console.log(`   Error: ${error.message}`)
         if (error.code === "EAUTH") {
@@ -69,11 +73,11 @@ const createEmailTransporter = () => {
           console.log("   💡 Make sure you're using an app password, not your regular password")
         } else if (error.code === "ECONNECTION") {
           console.log("   💡 Connection failed - check EMAIL_HOST and EMAIL_PORT")
+          console.log("   💡 Production servers may have firewall restrictions")
+        } else if (error.code === "ETIMEDOUT") {
+          console.log("   💡 Connection timeout - production network may be slower")
         }
-      } else {
-        console.log("✅ SMTP server is ready to take our messages")
-      }
-    })
+      })
 
     return transporter
   } catch (error) {
@@ -81,8 +85,6 @@ const createEmailTransporter = () => {
     return null
   }
 }
-
-const transporter = createEmailTransporter()
 
 // Twilio client
 const twilioClient =
@@ -477,28 +479,46 @@ Thank you for your business! ✨`,
 
 const sendOrderConfirmation = async (order, userAgent = "", requestSource = "") => {
   try {
-    console.log(`📧 Triggering order confirmation for: ${order.orderNumber} ${order.customerInfo.email}`)
-    console.log(`📧 User agent: ${userAgent}`)
-    console.log(`📧 Request source: ${requestSource}`)
-    console.log(`📧 Starting email send process...`)
+    console.log(`📧 [DEBUG] Starting order confirmation for: ${order.orderNumber}`)
+    console.log(`📧 [DEBUG] Email address: ${order.customerInfo.email}`)
+    console.log(`📧 [DEBUG] User agent: ${userAgent}`)
+    console.log(`📧 [DEBUG] Request source: ${requestSource}`)
+
+    const transporter = createEmailTransporter()
+    if (!transporter) {
+      console.log(`❌ [DEBUG] Email transporter is NULL - checking environment variables...`)
+      console.log(`📧 [DEBUG] EMAIL_HOST: ${process.env.EMAIL_HOST ? "✅ Set" : "❌ Missing"}`)
+      console.log(`📧 [DEBUG] EMAIL_USER: ${process.env.EMAIL_USER ? "✅ Set" : "❌ Missing"}`)
+      console.log(`📧 [DEBUG] EMAIL_PASS: ${process.env.EMAIL_PASS ? "✅ Set" : "❌ Missing"}`)
+      console.log(`📧 [DEBUG] EMAIL_PORT: ${process.env.EMAIL_PORT || "Using default 587"}`)
+
+      throw new Error("Email transporter not configured - check environment variables")
+    }
+
+    console.log(`📧 [DEBUG] Email transporter is available, proceeding with email send...`)
 
     // Generate payment instructions if not COD
     let paymentInstructions = null
     if (order.paymentMethod !== "COD") {
       paymentInstructions = generatePaymentInstructions(order.paymentMethod, order)
+      console.log(`📧 [DEBUG] Generated payment instructions for: ${order.paymentMethod}`)
     }
 
     const emailData = { order, paymentInstructions }
     const whatsappData = { order }
 
+    console.log(`📧 [DEBUG] Calling sendEmail function...`)
+
     // Send email synchronously to ensure it completes before response
-    await sendEmail(
+    const emailResult = await sendEmail(
       "orderConfirmation",
       order.customerInfo.email,
       `Order Confirmation - ${order.orderNumber}`,
       emailData,
     )
-    console.log(`✅ Email sent successfully to ${order.customerInfo.email}`)
+
+    console.log(`✅ [DEBUG] Email sent successfully to ${order.customerInfo.email}`)
+    console.log(`📧 [DEBUG] Email result:`, emailResult)
 
     // Send WhatsApp asynchronously (can fail without affecting order)
     sendWhatsApp("orderConfirmation", order.customerInfo.phone, whatsappData)
@@ -509,14 +529,18 @@ const sendOrderConfirmation = async (order, userAgent = "", requestSource = "") 
         console.error(`❌ WhatsApp failed for ${order.orderNumber}:`, error.message)
       })
 
-    console.log(`Order confirmation sent for ${order.orderNumber}`)
-    console.log(`📧 Order confirmation sent successfully for: ${order.orderNumber}`)
+    console.log(`📧 [DEBUG] Order confirmation process completed successfully for: ${order.orderNumber}`)
 
     return { success: true, message: "Notifications sent successfully" }
   } catch (error) {
-    console.error("Order confirmation error:", error)
-    // Don't throw error - let order creation succeed even if notifications fail
-    return { success: false, error: error.message }
+    console.error(`❌ [DEBUG] Order confirmation error for ${order.orderNumber}:`, error)
+    console.error(`❌ [DEBUG] Error details:`, {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+    })
+
+    throw error
   }
 }
 
@@ -685,18 +709,23 @@ const generatePaymentInstructions = (paymentMethod, order) => {
 }
 
 const sendEmail = async (type, to, subject, data, retryCount = 0) => {
+  console.log(`📧 [DEBUG] sendEmail called with type: ${type}, to: ${to}, retry: ${retryCount}`)
+
+  const transporter = createEmailTransporter()
   if (!transporter) {
-    console.log("❌ Email transporter not configured, skipping email notification")
-    console.log("   Please set up your Zoho email environment variables:")
-    console.log("   EMAIL_HOST=smtp.zoho.com")
+    console.log("❌ [DEBUG] Email transporter not configured in sendEmail function")
+    console.log("   Please set up your email environment variables:")
+    console.log("   EMAIL_HOST=smtp.zoho.com (or your SMTP server)")
     console.log("   EMAIL_PORT=587")
-    console.log("   EMAIL_USER=your_email@zohomail.com")
-    console.log("   EMAIL_PASS=your_zoho_app_password")
+    console.log("   EMAIL_USER=your_email@domain.com")
+    console.log("   EMAIL_PASS=your_app_password")
     throw new Error("Email transporter not configured")
   }
 
   try {
+    console.log(`📧 [DEBUG] Generating email template for type: ${type}`)
     const htmlContent = getEmailTemplate(type, data)
+    console.log(`📧 [DEBUG] Email template generated, length: ${htmlContent.length} characters`)
 
     const messageId = `<${Date.now()}-${Math.random().toString(36).substr(2, 9)}@${process.env.EMAIL_DOMAIN || "glowing-gallery.com"}>`
 
@@ -708,7 +737,6 @@ const sendEmail = async (type, to, subject, data, retryCount = 0) => {
       headers: {
         "Message-ID": messageId,
         "Reply-To": process.env.EMAIL_USER,
-        "X-Mailer": "Glowing Gallery Order System v2.0",
       },
       text: `
 Order Confirmation - ${data.order?.orderNumber || "N/A"}
@@ -729,11 +757,19 @@ Thank you for choosing Glowing Gallery!
       `.trim(),
     }
 
-    console.log(`📧 Sending email to ${to}: ${subject}`)
-    console.log(`📧 Attempt ${retryCount + 1}/4`)
+    console.log(`📧 [DEBUG] Mail options prepared:`)
+    console.log(`   From: ${mailOptions.from}`)
+    console.log(`   To: ${mailOptions.to}`)
+    console.log(`   Subject: ${mailOptions.subject}`)
+    console.log(`   Environment: ${process.env.NODE_ENV || "development"}`)
+    console.log(`📧 [DEBUG] Sending email attempt ${retryCount + 1}/4`)
 
     const info = await transporter.sendMail(mailOptions)
-    console.log(`✅ Email sent successfully to ${to}. Message ID: ${info.messageId}`)
+    console.log(`✅ [DEBUG] Email sent successfully to ${to}. Message ID: ${info.messageId}`)
+
+    if (process.env.NODE_ENV === "development") {
+      console.log(`📧 [DEBUG] Full email info:`, info)
+    }
 
     if (info.accepted && info.accepted.length > 0) {
       console.log(`✅ Email accepted by server for: ${info.accepted.join(", ")}`)
@@ -745,32 +781,38 @@ Thank you for choosing Glowing Gallery!
 
     return info
   } catch (error) {
-    console.error("❌ Email sending failed:", error.message)
-    console.error("   Email type:", type, "to:", to, "retry:", retryCount)
+    console.error(`❌ [DEBUG] Email sending failed on attempt ${retryCount + 1}:`, error.message)
+    console.error(`   Email type: ${type}`)
+    console.error(`   To: ${to}`)
+    console.error(`   Error code: ${error.code}`)
+    console.error(`   Environment: ${process.env.NODE_ENV || "development"}`)
 
     if (error.code === "EAUTH") {
       console.error("   🔐 Authentication failed - check your EMAIL_USER and EMAIL_PASS")
       console.error("   💡 Make sure you're using an app password, not your regular password")
-      console.error("   💡 Verify your Zoho account settings allow SMTP access")
+      console.error("   💡 Verify your email account settings allow SMTP access")
+      console.error("   💡 Some hosting providers block SMTP - check with your host")
     } else if (error.code === "ECONNECTION" || error.code === "ETIMEDOUT") {
       console.error("   🌐 Connection failed - check EMAIL_HOST and EMAIL_PORT")
-      console.error("   💡 This might be a temporary network issue")
+      console.error("   💡 Production servers may have firewall restrictions")
+      console.error("   💡 Try using port 465 with secure: true for some hosts")
     } else if (error.code === "EMESSAGE") {
       console.error("   📧 Message rejected - check email content and recipient")
     } else if (error.code === "ESOCKET") {
-      console.error("   🔌 Socket error - network connectivity issue")
+      console.error("   🔌 Socket error - network connectivity issue in production")
     } else if (error.response) {
       console.error("   📤 SMTP response:", error.response)
     }
 
-    const retryableErrors = ["ECONNECTION", "ETIMEDOUT", "ESOCKET", "ENOTFOUND", "ECONNRESET"]
+    const retryableErrors = ["ECONNECTION", "ETIMEDOUT", "ESOCKET", "ENOTFOUND", "ECONNRESET", "EPIPE"]
     if (retryCount < 3 && (retryableErrors.includes(error.code) || error.message.includes("timeout"))) {
-      const delay = Math.pow(2, retryCount) * 2000 // Exponential backoff: 2s, 4s, 8s
-      console.log(`🔄 Retrying email send (attempt ${retryCount + 1}/3) in ${delay / 1000} seconds...`)
+      const delay = Math.pow(2, retryCount) * 3000 // Longer delays for production: 3s, 6s, 12s
+      console.log(`🔄 [DEBUG] Retrying email send (attempt ${retryCount + 2}/4) in ${delay / 1000} seconds...`)
       await new Promise((resolve) => setTimeout(resolve, delay))
       return sendEmail(type, to, subject, data, retryCount + 1)
     }
 
+    console.error(`❌ [DEBUG] Email sending failed permanently after ${retryCount + 1} attempts`)
     throw error
   }
 }
