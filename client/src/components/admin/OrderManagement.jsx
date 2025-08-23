@@ -2050,16 +2050,17 @@ const OrderManagement = () => {
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2rem" }}>
-        <h2>Order Management</h2>
-        <div style={{ display: "flex", gap: "1rem" }}>
-          <input
+      <div style={{ display: "", alignItems: "center", justifyContent: "space-between", marginBottom: "2rem" }}>
+        <h1 className="p-5 text-3xl font-bold text-black">Order Management</h1>
+        <br />
+        <div style={{ display: "flex", gap: "1rem", marginLeft:"10px", }}>
+          {/* <input
             type="text"
             placeholder="Search orders..."
             value={filters.search}
             onChange={(e) => handleFilterChange({ ...filters, search: e.target.value })}
             style={{ padding: "0.5rem", borderRadius: "4px", border: "1px solid #ddd" }}
-          />
+          /> */}
           <input
             type="date"
             value={filters.dateFrom}
@@ -2121,9 +2122,9 @@ const OrderManagement = () => {
           border: "1px solid #e9ecef",
         }}
       >
-        <h3 style={{ marginBottom: "1rem", color: "#333", fontSize: "1.1rem" }}>
+        {/* <h3 style={{ marginBottom: "1rem", color: "#333", fontSize: "1.1rem" }}>
           Current Page Summary (Page {currentPage} of {totalPages} - Total: {totalOrders} orders)
-        </h3>
+        </h3> */}
         <div
           style={{
             display: "grid",
