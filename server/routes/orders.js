@@ -1,5 +1,3 @@
-
-
 const express = require("express")
 const Order = require("../models/Order")
 const Product = require("../models/Product")
@@ -13,11 +11,7 @@ const router = express.Router()
 router.post("/", async (req, res) => {
   try {
     console.log("Received order data:", JSON.stringify(req.body, null, 2))
-
-    const userAgent = req.headers["user-agent"] || ""
-    const isMobile = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent)
-    console.log(`📱 Device type: ${isMobile ? "Mobile" : "Desktop"} - User Agent: ${userAgent}`)
-
+    
     const { customerInfo, items, subtotal, shippingProtection, discountCode, total, paymentMethod, notes } = req.body
 
     // Helpers to sanitize common mobile autofill artifacts (zero-width chars, NBSP, etc.)
@@ -41,13 +35,11 @@ router.post("/", async (req, res) => {
       country: stripInvisibles(customerInfo?.country),
     }
 
+    // Basic email validation to avoid nodemailer errors
     const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
     if (!normalizedCustomer.email || !emailRegex.test(normalizedCustomer.email)) {
-      console.error(`❌ Invalid email from ${isMobile ? "mobile" : "desktop"}: "${normalizedCustomer.email}"`)
       return res.status(400).json({ message: "Please provide a valid email address" })
     }
-
-    console.log(`✅ Email validated for ${isMobile ? "mobile" : "desktop"}: ${normalizedCustomer.email}`)
 
     // Validate products and calculate total
     let calculatedSubtotal = 0
@@ -100,51 +92,19 @@ router.post("/", async (req, res) => {
     await order.save()
     await order.populate("items.product")
 
-    const emailPromise = (async () => {
-      try {
-        console.log(
-          `📧 [${isMobile ? "MOBILE" : "DESKTOP"}] Triggering order confirmation for:`,
-          order.orderNumber,
-          normalizedCustomer.email,
-        )
-
-        // Add timeout protection for mobile connections
-        const emailTimeout = isMobile ? 15000 : 30000 // 15s for mobile, 30s for desktop
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error(`Email timeout after ${emailTimeout}ms`)), emailTimeout),
-        )
-
-        await Promise.race([sendOrderConfirmation(order, isMobile), timeoutPromise])
-
-        console.log(
-          `📧 [${isMobile ? "MOBILE" : "DESKTOP"}] Order confirmation sent successfully for:`,
-          order.orderNumber,
-        )
-        return { success: true }
-      } catch (notificationError) {
-        console.error(
-          `❌ [${isMobile ? "MOBILE" : "DESKTOP"}] Notification error (order: ${order.orderNumber}):`,
-          notificationError?.message || notificationError,
-        )
-        // Log additional details for mobile debugging
-        if (isMobile) {
-          console.error(`📱 Mobile-specific error details:`, {
-            errorCode: notificationError?.code,
-            errorType: notificationError?.name,
-            stack: notificationError?.stack?.split("\n")[0],
-          })
-        }
-        return { success: false, error: notificationError?.message }
-      }
-    })()
-
-    if (isMobile) {
-      // Fire and forget for mobile - respond immediately
-      emailPromise.catch(() => {}) // Prevent unhandled promise rejection
-      console.log(`📱 Mobile order created, email sending in background`)
-    } else {
-      // Wait for email on desktop (existing behavior)
-      await emailPromise
+    // Send confirmation notifications BEFORE responding to avoid serverless freeze dropping tasks
+    try {
+      console.log("📧 Triggering order confirmation for:", order.orderNumber, normalizedCustomer.email)
+      await sendOrderConfirmation(order)
+      console.log("📧 Order confirmation sent for:", order.orderNumber)
+    } catch (notificationError) {
+      console.error(
+        "Notification error (order:",
+        order.orderNumber,
+        "):",
+        notificationError?.message || notificationError,
+      )
+      // Do not fail order creation if notifications fail
     }
 
     res.status(201).json({
@@ -200,18 +160,18 @@ router.patch("/:orderId/payment", upload.single("receiptImage"), async (req, res
       receiptImage: req.file.path, // Cloudinary URL
       paymentConfirmedAt: new Date(),
     }
-
+    
     // Update payment status to indicate payment proof submitted
     order.paymentStatus = "pending" // Will be confirmed by admin
-
+    
     await order.save()
 
-    res.json({
-      message: "Payment details submitted successfully",
+    res.json({ 
+      message: "Payment details submitted successfully", 
       order: {
         orderNumber: order.orderNumber,
         paymentStatus: order.paymentStatus,
-      },
+      }
     })
   } catch (error) {
     console.error("Payment update error:", error)
