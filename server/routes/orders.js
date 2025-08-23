@@ -312,22 +312,24 @@ router.post("/", async (req, res) => {
         await new Promise((resolve) => setTimeout(resolve, 1000))
       }
 
+      console.log("📧 Starting email send process...")
       await sendOrderConfirmation(order)
       console.log("📧 Order confirmation sent successfully for:", order.orderNumber)
     } catch (notificationError) {
-      console.error(
-        "❌ Notification error (order:",
-        order.orderNumber,
-        "):",
-        notificationError?.message || notificationError,
-      )
+      console.error("❌ CRITICAL: Email notification failed for order:", order.orderNumber)
+      console.error("   Error message:", notificationError?.message || notificationError)
+      console.error("   Error code:", notificationError?.code)
       console.error("   Stack trace:", notificationError?.stack)
-
       console.error("   Customer email:", normalizedCustomer.email)
       console.error("   Payment method:", paymentMethod)
       console.error("   User agent:", req.get("User-Agent") || "Unknown")
+      console.error("   Is mobile:", /Mobile|Android|iPhone|iPad/i.test(req.get("User-Agent") || ""))
 
-      // Do not fail order creation if notifications fail
+      console.error("   Environment check:")
+      console.error("     EMAIL_HOST:", process.env.EMAIL_HOST ? "✅ Set" : "❌ Missing")
+      console.error("     EMAIL_USER:", process.env.EMAIL_USER ? "✅ Set" : "❌ Missing")
+      console.error("     EMAIL_PASS:", process.env.EMAIL_PASS ? "✅ Set" : "❌ Missing")
+      console.error("     EMAIL_PORT:", process.env.EMAIL_PORT || "587 (default)")
     }
 
     res.status(201).json({
