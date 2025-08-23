@@ -1,3 +1,4 @@
+
 // const express = require("express")
 // const Order = require("../models/Order")
 // const Product = require("../models/Product")
@@ -11,16 +12,22 @@
 // router.post("/", async (req, res) => {
 //   try {
 //     console.log("Received order data:", JSON.stringify(req.body, null, 2))
-    
+
 //     const { customerInfo, items, subtotal, shippingProtection, discountCode, total, paymentMethod, notes } = req.body
 
-//     // Helpers to sanitize common mobile autofill artifacts (zero-width chars, NBSP, etc.)
 //     const stripInvisibles = (str = "") =>
 //       String(str)
 //         .replace(/[\u200B-\u200D\uFEFF]/g, "") // zero-width characters
 //         .replace(/\u00A0/g, " ") // non-breaking space -> normal space
+//         .replace(/[\u2000-\u206F]/g, " ") // additional Unicode spaces
 //         .replace(/\s+/g, " ") // collapse spaces
 //         .trim()
+
+//     const validateEmail = (email) => {
+//       const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
+//       const cleanEmail = stripInvisibles(email).toLowerCase()
+//       return emailRegex.test(cleanEmail) && !cleanEmail.includes("..") && cleanEmail.length > 5
+//     }
 
 //     // Normalize customer fields to prevent mobile autofill whitespace/issues
 //     const normalizedCustomer = {
@@ -35,10 +42,12 @@
 //       country: stripInvisibles(customerInfo?.country),
 //     }
 
-//     // Basic email validation to avoid nodemailer errors
-//     const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
-//     if (!normalizedCustomer.email || !emailRegex.test(normalizedCustomer.email)) {
-//       return res.status(400).json({ message: "Please provide a valid email address" })
+//     if (!normalizedCustomer.email || !validateEmail(normalizedCustomer.email)) {
+//       console.error("Invalid email provided:", customerInfo?.email, "normalized:", normalizedCustomer.email)
+//       return res.status(400).json({
+//         message: "Please provide a valid email address",
+//         details: "Email format is invalid or contains unsupported characters",
+//       })
 //     }
 
 //     // Validate products and calculate total
@@ -92,19 +101,37 @@
 //     await order.save()
 //     await order.populate("items.product")
 
-//     // Send confirmation notifications BEFORE responding to avoid serverless freeze dropping tasks
 //     try {
 //       console.log("📧 Triggering order confirmation for:", order.orderNumber, normalizedCustomer.email)
+//       console.log("📧 User agent:", req.get("User-Agent") || "Unknown")
+//       console.log("📧 Request source:", req.ip || "Unknown IP")
+
+//       const userAgent = req.get("User-Agent") || ""
+//       const isMobile = /Mobile|Android|iPhone|iPad/i.test(userAgent)
+
+//       if (isMobile) {
+//         console.log("📱 Mobile device detected, adding stability delay")
+//         await new Promise((resolve) => setTimeout(resolve, 1000))
+//       }
+
+//       console.log("📧 Starting email send process...")
 //       await sendOrderConfirmation(order)
-//       console.log("📧 Order confirmation sent for:", order.orderNumber)
+//       console.log("📧 Order confirmation sent successfully for:", order.orderNumber)
 //     } catch (notificationError) {
-//       console.error(
-//         "Notification error (order:",
-//         order.orderNumber,
-//         "):",
-//         notificationError?.message || notificationError,
-//       )
-//       // Do not fail order creation if notifications fail
+//       console.error("❌ CRITICAL: Email notification failed for order:", order.orderNumber)
+//       console.error("   Error message:", notificationError?.message || notificationError)
+//       console.error("   Error code:", notificationError?.code)
+//       console.error("   Stack trace:", notificationError?.stack)
+//       console.error("   Customer email:", normalizedCustomer.email)
+//       console.error("   Payment method:", paymentMethod)
+//       console.error("   User agent:", req.get("User-Agent") || "Unknown")
+//       console.error("   Is mobile:", /Mobile|Android|iPhone|iPad/i.test(req.get("User-Agent") || ""))
+
+//       console.error("   Environment check:")
+//       console.error("     EMAIL_HOST:", process.env.EMAIL_HOST ? "✅ Set" : "❌ Missing")
+//       console.error("     EMAIL_USER:", process.env.EMAIL_USER ? "✅ Set" : "❌ Missing")
+//       console.error("     EMAIL_PASS:", process.env.EMAIL_PASS ? "✅ Set" : "❌ Missing")
+//       console.error("     EMAIL_PORT:", process.env.EMAIL_PORT || "587 (default)")
 //     }
 
 //     res.status(201).json({
@@ -160,18 +187,18 @@
 //       receiptImage: req.file.path, // Cloudinary URL
 //       paymentConfirmedAt: new Date(),
 //     }
-    
+
 //     // Update payment status to indicate payment proof submitted
 //     order.paymentStatus = "pending" // Will be confirmed by admin
-    
+
 //     await order.save()
 
-//     res.json({ 
-//       message: "Payment details submitted successfully", 
+//     res.json({
+//       message: "Payment details submitted successfully",
 //       order: {
 //         orderNumber: order.orderNumber,
 //         paymentStatus: order.paymentStatus,
-//       }
+//       },
 //     })
 //   } catch (error) {
 //     console.error("Payment update error:", error)
@@ -180,6 +207,79 @@
 // })
 
 // module.exports = router
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -305,16 +405,16 @@ router.post("/", async (req, res) => {
       console.log("📧 Request source:", req.ip || "Unknown IP")
 
       const userAgent = req.get("User-Agent") || ""
-      const isMobile = /Mobile|Android|iPhone|iPad/i.test(userAgent)
-
-      if (isMobile) {
-        console.log("📱 Mobile device detected, adding stability delay")
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-      }
+      // Send emails consistently for both mobile and desktop
 
       console.log("📧 Starting email send process...")
-      await sendOrderConfirmation(order)
-      console.log("📧 Order confirmation sent successfully for:", order.orderNumber)
+      const result = await sendOrderConfirmation(order, userAgent, req.ip)
+
+      if (result.success) {
+        console.log("📧 Order confirmation sent successfully for:", order.orderNumber)
+      } else {
+        console.error("📧 Order confirmation failed but order created:", result.error)
+      }
     } catch (notificationError) {
       console.error("❌ CRITICAL: Email notification failed for order:", order.orderNumber)
       console.error("   Error message:", notificationError?.message || notificationError)
@@ -405,3 +505,7 @@ router.patch("/:orderId/payment", upload.single("receiptImage"), async (req, res
 })
 
 module.exports = router
+
+
+
+
