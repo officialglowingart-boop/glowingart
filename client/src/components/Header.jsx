@@ -479,21 +479,19 @@ const Header = () => {
     }
   }, [isSearchOpen])
 
-  // Close search when clicking outside (desktop + mobile)
+  // Close search when clicking outside (desktop only)
   useEffect(() => {
-    if (!isSearchOpen) return
+    if (!isSearchOpen) return;
     const onDocMouseDown = (e) => {
-      const insideDesktop = !!(searchAreaRef.current && searchAreaRef.current.contains(e.target))
-      const insideMobile = !!(mobileSearchRef.current && mobileSearchRef.current.contains(e.target))
-      if (!insideDesktop && !insideMobile) setIsSearchOpen(false)
-    }
-    document.addEventListener("mousedown", onDocMouseDown)
-    document.addEventListener("touchstart", onDocMouseDown, { passive: true })
+      const insideDesktop = !!(searchAreaRef.current && searchAreaRef.current.contains(e.target));
+      // Only close search on desktop (md and up)
+      if (!insideDesktop && window.innerWidth >= 768) setIsSearchOpen(false);
+    };
+    document.addEventListener("mousedown", onDocMouseDown);
     return () => {
-      document.removeEventListener("mousedown", onDocMouseDown)
-      document.removeEventListener("touchstart", onDocMouseDown)
-    }
-  }, [isSearchOpen])
+      document.removeEventListener("mousedown", onDocMouseDown);
+    };
+  }, [isSearchOpen]);
 
   // no header height needed; mobile search now flows with page
 
@@ -569,8 +567,8 @@ const Header = () => {
             <div className="flex items-center gap-2 sm:gap-4 flex-1 justify-end sm:mt-16">
               <span className="text-xs sm:text-sm text-gray-600 hidden sm:block">PAK | Rs</span>
 
-              {/* Mobile search icon next to cart (hidden when open) */}
-              {!isSearchOpen && (
+              {/* Mobile search icon (shows close icon when open) */}
+              {!isSearchOpen ? (
                 <button
                   className="p-2 ml-14 hover:bg-gray-100 rounded-lg transition-colors md:hidden"
                   aria-label="Open search"
@@ -579,6 +577,17 @@ const Header = () => {
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2">
                     <circle cx="11" cy="11" r="8" />
                     <path d="m21 21-4.35-4.35" />
+                  </svg>
+                </button>
+              ) : (
+                <button
+                  className="p-2 ml-14 hover:bg-gray-100 rounded-lg transition-colors md:hidden"
+                  aria-label="Close search"
+                  onClick={() => setIsSearchOpen(false)}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2">
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                    <line x1="6" y1="18" x2="18" y2="6" />
                   </svg>
                 </button>
               )}
