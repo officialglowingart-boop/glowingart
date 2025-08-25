@@ -499,7 +499,7 @@ const Header = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-40 md:static" style={{ backgroundColor: "#dfdfd8" }}>
+  <header className="sticky top-0 z-40 md:static" style={{ backgroundColor: "#dfdfd8" }}>
         {/* Replace the Top Banner with TextSlider */}
         <TextSlider />
 
@@ -520,7 +520,7 @@ const Header = () => {
                 </svg>
               </button>
               {/* Search Icon + inline desktop search */}
-              <div className="hidden md:flex items-center" ref={searchAreaRef}>
+              <div className="hidden md:flex items-center mt-16" ref={searchAreaRef}>
                 {!isSearchOpen && (
                   <button
                     className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -541,7 +541,7 @@ const Header = () => {
                       placeholder="Search products..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-64 px-3 py-2  rounded-l-lg focus:outline-none  "
+                      className="w-64 px-3 py-2  rounded-l-lg focus:outline-none"
                     />
                     <button
                       type="submit"
@@ -566,13 +566,13 @@ const Header = () => {
             </div>
 
             {/* Right: Currency + Cart */}
-            <div className="flex items-center gap-2 sm:gap-4 flex-1 justify-end">
+            <div className="flex items-center gap-2 sm:gap-4 flex-1 justify-end sm:mt-16">
               <span className="text-xs sm:text-sm text-gray-600 hidden sm:block">PAK | Rs</span>
 
               {/* Mobile search icon next to cart (hidden when open) */}
               {!isSearchOpen && (
                 <button
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors md:hidden"
+                  className="p-2 ml-14 hover:bg-gray-100 rounded-lg transition-colors md:hidden"
                   aria-label="Open search"
                   onClick={() => setIsSearchOpen(true)}
                 >
@@ -651,9 +651,13 @@ const Header = () => {
         )}
       </header>
 
-      {/* Search Box - mobile below navbar (flows with page) */}
+      {/* Search Box - mobile sticky below navbar, does not hide page title */}
       {isSearchOpen && (
-        <div ref={mobileSearchRef} className="md:hidden" style={{ backgroundColor: "#dfdfd8" }}>
+        <div
+          ref={mobileSearchRef}
+          className="md:hidden sticky z-40"
+          style={{ backgroundColor: "#dfdfd8", top: '104px' }} // adjust top to match navbar height
+        >
           <div className="max-w-7xl mx-auto px-4 py-2">
             <form onSubmit={handleSearch} className="flex">
               <input
