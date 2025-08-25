@@ -100,38 +100,9 @@ router.post("/", async (req, res) => {
     await order.save()
     await order.populate("items.product")
 
-    try {
-      console.log("📧 Triggering order confirmation for:", order.orderNumber, normalizedCustomer.email)
-      console.log("📧 User agent:", req.get("User-Agent") || "Unknown")
-      console.log("📧 Request source:", req.ip || "Unknown IP")
-
-      const userAgent = req.get("User-Agent") || ""
-      // Send emails consistently for both mobile and desktop
-
-      console.log("📧 Starting email send process...")
-      const result = await sendOrderConfirmation(order, userAgent, req.ip)
-
-      if (result.success) {
-        console.log("📧 Order confirmation sent successfully for:", order.orderNumber)
-      } else {
-        console.error("📧 Order confirmation failed but order created:", result.error)
-      }
-    } catch (notificationError) {
-      console.error("❌ CRITICAL: Email notification failed for order:", order.orderNumber)
-      console.error("   Error message:", notificationError?.message || notificationError)
-      console.error("   Error code:", notificationError?.code)
-      console.error("   Stack trace:", notificationError?.stack)
-      console.error("   Customer email:", normalizedCustomer.email)
-      console.error("   Payment method:", paymentMethod)
-      console.error("   User agent:", req.get("User-Agent") || "Unknown")
-      console.error("   Is mobile:", /Mobile|Android|iPhone|iPad/i.test(req.get("User-Agent") || ""))
-
-      console.error("   Environment check:")
-      console.error("     EMAIL_HOST:", process.env.EMAIL_HOST ? "✅ Set" : "❌ Missing")
-      console.error("     EMAIL_USER:", process.env.EMAIL_USER ? "✅ Set" : "❌ Missing")
-      console.error("     EMAIL_PASS:", process.env.EMAIL_PASS ? "✅ Set" : "❌ Missing")
-      console.error("     EMAIL_PORT:", process.env.EMAIL_PORT || "587 (default)")
-    }
+    console.log("📦 Order created successfully:", order.orderNumber, "for", normalizedCustomer.email)
+    console.log("📦 Payment method:", paymentMethod)
+    console.log("📦 Email will be sent only after confirmation")
 
     res.status(201).json({
       message: "Order placed successfully",
@@ -192,6 +163,21 @@ router.patch("/:orderId/payment", upload.single("receiptImage"), async (req, res
 
     await order.save()
 
+    try {
+      console.log("📧 Sending order confirmation after payment proof submission for:", order.orderNumber)
+      const userAgent = req.get("User-Agent") || ""
+      const result = await sendOrderConfirmation(order, userAgent, req.ip)
+
+      if (result.success) {
+        console.log("📧 Order confirmation sent successfully after payment proof for:", order.orderNumber)
+      } else {
+        console.error("📧 Order confirmation failed after payment proof:", result.error)
+      }
+    } catch (notificationError) {
+      console.error("❌ Email notification failed after payment proof for order:", order.orderNumber)
+      console.error("   Error:", notificationError?.message || notificationError)
+    }
+
     res.json({
       message: "Payment details submitted successfully",
       order: {
@@ -201,6 +187,54 @@ router.patch("/:orderId/payment", upload.single("receiptImage"), async (req, res
     })
   } catch (error) {
     console.error("Payment update error:", error)
+    res.status(500).json({ message: "Server error" })
+  }
+})
+
+router.patch("/:orderId/confirm-cod", async (req, res) => {
+  try {
+    const { orderId } = req.params
+
+    const order = await Order.findOne({ orderNumber: orderId })
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" })
+    }
+
+    if (order.paymentMethod !== "COD") {
+      return res.status(400).json({ message: "This endpoint is only for COD orders" })
+    }
+
+    // Update order status to confirmed
+    order.paymentStatus = "confirmed"
+    order.status = "confirmed"
+    await order.save()
+
+    // Send email notification for COD confirmation
+    try {
+      console.log("📧 Sending order confirmation for COD order:", order.orderNumber)
+      const userAgent = req.get("User-Agent") || ""
+      const result = await sendOrderConfirmation(order, userAgent, req.ip)
+
+      if (result.success) {
+        console.log("📧 COD order confirmation sent successfully for:", order.orderNumber)
+      } else {
+        console.error("📧 COD order confirmation failed:", result.error)
+      }
+    } catch (notificationError) {
+      console.error("❌ Email notification failed for COD order:", order.orderNumber)
+      console.error("   Error:", notificationError?.message || notificationError)
+    }
+
+    res.json({
+      message: "COD order confirmed successfully",
+      order: {
+        orderNumber: order.orderNumber,
+        paymentStatus: order.paymentStatus,
+        status: order.status,
+      },
+    })
+  } catch (error) {
+    console.error("COD confirmation error:", error)
     res.status(500).json({ message: "Server error" })
   }
 })

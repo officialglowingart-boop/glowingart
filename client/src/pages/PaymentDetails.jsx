@@ -24,6 +24,8 @@ const PaymentDetails = () => {
   const [previewUrl, setPreviewUrl] = useState(null)
   const fileInputRef = useRef(null)
 
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+
   useEffect(() => {
     fetchPaymentInstructions()
   }, [orderNumber])
@@ -86,7 +88,13 @@ const PaymentDetails = () => {
       return
     }
 
+    setShowConfirmModal(true)
+  }
+
+  const handleConfirmPayment = async () => {
     setSubmitting(true)
+    setShowConfirmModal(false)
+
     try {
       const formData = new FormData()
       formData.append("transactionId", paymentData.transactionId)
@@ -95,11 +103,11 @@ const PaymentDetails = () => {
         formData.append("receipt", paymentData.receipt)
       }
 
-    const result = await confirmPayment(orderNumber, formData)
+      const result = await confirmPayment(orderNumber, formData)
       // Navigate to success page with lightweight order details
       navigate(`/payment/${orderNumber}/success`, {
         state: {
-      type: "online",
+          type: "online",
           order: {
             orderNumber: order?.orderNumber || orderNumber,
             subtotal: order?.subtotal,
@@ -123,7 +131,7 @@ const PaymentDetails = () => {
   const getPaymentDetails = () => {
     if (!order) return null
 
-  const { paymentMethod } = order
+    const { paymentMethod } = order
 
     switch (paymentMethod) {
       case "JazzCash":
@@ -143,8 +151,8 @@ const PaymentDetails = () => {
           additionalInfo: "After payment, enter your transaction ID below and upload the receipt screenshot.",
         }
 
-  case "Easypaisa":
-  case "EasyPaisa":
+      case "Easypaisa":
+      case "EasyPaisa":
         return {
           title: "Easypaisa Payment Details",
           color: "#00a651",
@@ -177,7 +185,7 @@ const PaymentDetails = () => {
           additionalInfo: "Bank transfers may take 1-2 business days to process.",
         }
 
-  case "Crypto":
+      case "Crypto":
         return {
           title: "Cryptocurrency Payment",
           color: "#f7931a",
@@ -195,9 +203,7 @@ const PaymentDetails = () => {
         return {
           title: "USDT (TRC-20) Payment",
           color: "#26A17B",
-          instructions: [
-            "Send the equivalent amount in USDT (TRC-20) to the address below:",
-          ],
+          instructions: ["Send the equivalent amount in USDT (TRC-20) to the address below:"],
           details: {
             "USDT (TRC20)": "TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE",
             Amount: `$${(order.total / 280).toFixed(2)} USD`,
@@ -224,10 +230,7 @@ const PaymentDetails = () => {
     }
     const base = baseMap[method]
     if (!base) return []
-    return [
-      `/assets/payment/${base}.png`,
-      `/assets/payment/${base}.svg`,
-    ]
+    return [`/assets/payment/${base}.png`, `/assets/payment/${base}.svg`]
   }
 
   if (loading) {
@@ -321,8 +324,10 @@ const PaymentDetails = () => {
       <div className="max-w-7xl mx-auto sm:px-4  ">
         <div className="rounded-lg  overflow-hidden">
           {/* Header */}
-          <div className="from-yellow-600 to-yellow-700 text-black
-           p-6">
+          <div
+            className="from-yellow-600 to-yellow-700 text-black
+           p-6"
+          >
             <h1 className="text-2xl font-bold mb-2">Complete Your Payment</h1>
             <p className="opacity-90">Order #{order.orderNumber}</p>
           </div>
@@ -339,7 +344,7 @@ const PaymentDetails = () => {
                         const logoSrc = sources[logoStep]
                         return logoSrc && !logoError ? (
                           <img
-                            src={logoSrc}
+                            src={logoSrc || "/placeholder.svg"}
                             alt={`${order.paymentMethod} logo`}
                             className="w-full h-full object-contain p-2 md:p-3"
                             onError={() => {
@@ -375,7 +380,10 @@ const PaymentDetails = () => {
 
                     <div className="bg-gray-50 p-4 rounded-lg">
                       {Object.entries(paymentDetails.details).map(([key, value]) => (
-                        <div key={key} className="flex items-start justify-between py-2 border-b border-gray-200 last:border-b-0">
+                        <div
+                          key={key}
+                          className="flex items-start justify-between py-2 border-b border-gray-200 last:border-b-0"
+                        >
                           <span className="font-medium text-gray-700 mr-3 flex-shrink-0">{key}:</span>
                           <span className="text-gray-900 font-mono break-all sm:break-normal max-w-[65%] sm:max-w-none text-right">
                             {value}
@@ -508,6 +516,50 @@ const PaymentDetails = () => {
           </div>
         </div>
       </div>
+
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Confirm Your Order</h3>
+            <div className="space-y-3 mb-6">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-2">Order Summary</h4>
+                <p className="text-gray-700">
+                  Total Amount: <span className="font-bold">Rs.{order.total.toLocaleString()}</span>
+                </p>
+                <p className="text-gray-700">
+                  Payment Method: <span className="font-medium">{order.paymentMethod}</span>
+                </p>
+                <p className="text-gray-700">
+                  Transaction ID: <span className="font-medium">{paymentData.transactionId}</span>
+                </p>
+              </div>
+              <p className="text-sm text-gray-600">
+                By confirming this order, you agree to proceed with the purchase. Your payment proof will be submitted
+                for verification and you'll receive an email confirmation.
+              </p>
+            </div>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                disabled={submitting}
+                className="flex-1 px-4 py-2 border-2 border-gray-400 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                style={{ backgroundColor: "#dfdfd8" }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmPayment}
+                disabled={submitting}
+                className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
+              >
+                {submitting ? "Confirming..." : "Confirm Order"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Image preview modal */}
       {isImageModalOpen && previewUrl && (
         <div
@@ -523,7 +575,11 @@ const PaymentDetails = () => {
             >
               ✕
             </button>
-            <img src={previewUrl} alt="Receipt full size" className="w-full max-h-[80vh] object-contain rounded-md" />
+            <img
+              src={previewUrl || "/placeholder.svg"}
+              alt="Receipt full size"
+              className="w-full max-h-[80vh] object-contain rounded-md"
+            />
           </div>
         </div>
       )}
