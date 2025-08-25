@@ -165,7 +165,7 @@ const getEmailTemplate = (type, data) => {
       body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
       .container { max-width: 600px; margin: 0 auto; padding: 20px; }
       .header { background: linear-gradient(135deg, #d4af37, #f4e4a6); padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-      .header h1 { color: white; margin: 0; font-size: 2.5rem; font-style: italic; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+      .header h1 { color: black; margin: 0; font-size: 2.5rem; font-style: italic; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
       .content { background: white; padding: 30px; border: 1px solid #e0e0e0; }
       .footer { background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; border: 1px solid #e0e0e0; border-top: none; }
       .order-details { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
@@ -187,8 +187,8 @@ const getEmailTemplate = (type, data) => {
       ${baseStyle}
       <div class="container">
         <div class="header">
-          <h1>Glowing Gallery</h1>
-          <p style="color: white; margin: 10px 0 0; font-size: 1.2rem;">Order Confirmation</p>
+          <h1>Glowing-Art</h1>
+          <p style="color: black; margin: 10px 0 0; font-size: 1.2rem;">Order Confirmation</p>
         </div>
         <div class="content">
           <h2 style="color: #d4af37;">Thank you for your order, ${data.order.customerInfo.firstName}!</h2>
@@ -313,7 +313,7 @@ const getEmailTemplate = (type, data) => {
         </div>
         <div class="footer">
           <p><strong>Questions?</strong> Contact us at ${process.env.EMAIL_USER} or WhatsApp: +92-XXX-XXXXXXX</p>
-          <p style="color: #666; font-size: 0.9rem;">Thank you for choosing Glowing Gallery!</p>
+          <p style="color: #666; font-size: 0.9rem;">Thank you for choosing Glowing-Art!</p>
         </div>
       </div>
     `,
@@ -322,8 +322,8 @@ const getEmailTemplate = (type, data) => {
       ${baseStyle}
       <div class="container">
         <div class="header">
-          <h1>Glowing Gallery</h1>
-          <p style="color: white; margin: 10px 0 0; font-size: 1.2rem;">Order Update</p>
+          <h1>Glowing-Art</h1>
+          <p style="color: black; margin: 10px 0 0; font-size: 1.2rem;">Order Update</p>
         </div>
         <div class="content">
           <h2 style="color: #d4af37;">Order Status Update</h2>
@@ -382,7 +382,7 @@ const getEmailTemplate = (type, data) => {
           </p>
         </div>
         <div class="footer">
-          <p>Thank you for choosing Glowing Gallery!</p>
+          <p>Thank you for choosing Glowing-Art!</p>
         </div>
       </div>
     `,
@@ -391,8 +391,8 @@ const getEmailTemplate = (type, data) => {
       ${baseStyle}
       <div class="container">
         <div class="header">
-          <h1>Glowing Gallery</h1>
-          <p style="color: white; margin: 10px 0 0; font-size: 1.2rem;">Payment Reminder</p>
+          <h1>Glowing-Art</h1>
+          <p style="color: black; margin: 10px 0 0; font-size: 1.2rem;">Payment Reminder</p>
         </div>
         <div class="content">
           <h2 style="color: #d4af37;">Payment Pending</h2>
@@ -442,7 +442,7 @@ const getEmailTemplate = (type, data) => {
 
 const getWhatsAppMessage = (type, data) => {
   const messages = {
-    orderConfirmation: `🎨 *GLOWING GALLERY* 🎨
+    orderConfirmation: `🎨 *GLOWING ART* 🎨
 
 ✅ *Order Confirmed!*
 
@@ -473,9 +473,9 @@ Pay when you receive your order. COD fee may apply.`
 
 🔍 Track your order: ${process.env.FRONTEND_URL || "http://localhost:3000"}/track/${data.order.orderNumber}
 
-Thank you for choosing Glowing Gallery! ✨`,
+Thank you for choosing Glowing-Art! ✨`,
 
-    statusUpdate: `🎨 *GLOWING GALLERY* 🎨
+    statusUpdate: `🎨 *GLOWING-ART* 🎨
 
 📦 *Order Update*
 
@@ -494,7 +494,7 @@ ${data.order.notes ? `📝 *Notes:* ${data.order.notes}` : ""}
 
 Questions? Reply to this message! 💬`,
 
-    paymentReminder: `🎨 *GLOWING GALLERY* 🎨
+    paymentReminder: `🎨 *GLOWING-ART* 🎨
 
 ⏰ *Payment Reminder*
 
@@ -516,7 +516,7 @@ ${data.order.paymentMethod === "Crypto" ? "₿ *Crypto:* Check email for wallet 
 
 Need help? Reply to this message! 💬`,
 
-    paymentConfirmed: `🎨 *GLOWING GALLERY* 🎨
+    paymentConfirmed: `🎨 *GLOWING-ART* 🎨
 
 ✅ *Payment Confirmed!*
 
@@ -676,7 +676,7 @@ const generatePaymentInstructions = (paymentMethod, order) => {
         "Send the screenshot to our WhatsApp: +92-XXX-XXXXXXX",
       ],
       accountDetails: {
-        accountTitle: "Glowing Gallery",
+        accountTitle: "Glowing-Art",
         accountNumber: "03XX-XXXXXXX",
         reference: order.orderNumber,
       },
@@ -692,7 +692,7 @@ const generatePaymentInstructions = (paymentMethod, order) => {
         "Send the screenshot to our WhatsApp: +92-XXX-XXXXXXX",
       ],
       accountDetails: {
-        accountTitle: "Glowing Gallery",
+        accountTitle: "Glowing-Art",
         accountNumber: "03XX-XXXXXXX",
         reference: order.orderNumber,
       },
@@ -709,7 +709,7 @@ const generatePaymentInstructions = (paymentMethod, order) => {
       ],
       accountDetails: {
         bankName: "HBL Bank",
-        accountTitle: "Glowing Gallery",
+        accountTitle: "Glowing Art",
         accountNumber: "XXXX-XXXX-XXXX-XXXX",
         iban: "PK36HABB0000000000000000",
         reference: order.orderNumber,
@@ -812,16 +812,16 @@ const sendEmail = async (type, to, subject, data, retryCount = 0) => {
 
     let senderEmail = envEmailUser
     if (!envEmailUser || placeholderPatterns.some((pattern) => envEmailUser.toLowerCase().includes(pattern))) {
-      senderEmail = "order@glowing-art.com" // Use hardcoded fallback
+      senderEmail = "support@glowing-art.com" // Use hardcoded fallback
       console.log(`📧 [DEBUG] Using hardcoded sender email: ${senderEmail}`)
     } else {
       console.log(`📧 [DEBUG] Using environment sender email: ${senderEmail}`)
     }
 
-    const messageId = `<${Date.now()}-${Math.random().toString(36).substr(2, 9)}@${process.env.EMAIL_DOMAIN || "glowing-gallery.com"}>`
+    const messageId = `<${Date.now()}-${Math.random().toString(36).substr(2, 9)}@${process.env.EMAIL_DOMAIN || "glowing-art.com"}>`
 
     const mailOptions = {
-      from: `"Glowing Gallery" <${senderEmail}>`, // Use determined sender email instead of process.env.EMAIL_USER
+      from: `"Glowing-Art" <${senderEmail}>`, // Use determined sender email instead of process.env.EMAIL_USER
       to: to.trim(),
       subject,
       html: htmlContent,
@@ -844,7 +844,7 @@ Track your order: ${process.env.FRONTEND_URL || "http://localhost:3000"}/track/$
 
 Questions? Contact us at ${senderEmail}
 
-Thank you for choosing Glowing Gallery!
+Thank you for choosing Glowing-Art!
       `.trim(),
     }
 
