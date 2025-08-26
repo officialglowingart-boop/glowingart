@@ -12,6 +12,8 @@ const Checkout = () => {
   const { cartItems, clearCart } = useCart()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [pendingOrderData, setPendingOrderData] = useState(null)
 
   const [customerInfo, setCustomerInfo] = useState({
     firstName: "",
@@ -56,7 +58,8 @@ const Checkout = () => {
     return Math.max(total, 0)
   }
 
-  const handleSubmit = async (e) => {
+  // Step 1: Place Order -> open confirmation modal (do NOT create order yet)
+  const handlePlaceOrder = async (e) => {
     e.preventDefault()
     setLoading(true)
 
@@ -89,23 +92,45 @@ const Checkout = () => {
         paymentMethod: paymentMethod,
         notes: notes,
       }
+      // For COD, we open our confirm modal.
+      // For Online payments, go to Payment Details page without creating order yet.
+      if (paymentTab === 'cod') {
+        setPendingOrderData(orderData)
+        setShowConfirm(true)
+      } else {
+        navigate('/payment/online', { state: { pendingOrder: orderData, cartItems } })
+      }
+    } catch (error) {
+      console.error("Order placement failed:", error)
+      const msg = error?.response?.data?.message || error?.message || "Failed to place order. Please try again."
+      alert(msg)
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  console.log("Sending order data:", orderData)
+  // Step 2: User clicks "Order Confirm" -> create order and proceed
+  const handleConfirmOrder = async () => {
+    if (!pendingOrderData) {
+      setShowConfirm(false)
+      return
+    }
 
-  // Use centralized API client so env/baseURL is consistent across environments
-  const result = await createOrder(orderData)
-  if (result && result.order) {
+    setLoading(true)
+    try {
+      console.log("Creating order with data:", pendingOrderData)
+      const result = await createOrder(pendingOrderData)
+      if (result && result.order) {
         const order = result.order
 
         clearCart()
 
-        if (paymentMethod === "COD") {
-          // Go to COD confirmation page, then to success on user confirmation
+        if (pendingOrderData.paymentMethod === "COD") {
           navigate(`/payment/${order.orderNumber}`)
         } else {
           const orderWithDetails = {
             ...order,
-            customerInfo: customerInfo,
+            customerInfo: pendingOrderData.customerInfo,
             items: cartItems,
           }
           localStorage.setItem(`order_${order.orderNumber}`, JSON.stringify(orderWithDetails))
@@ -115,11 +140,13 @@ const Checkout = () => {
         throw new Error("Unexpected response from server")
       }
     } catch (error) {
-      console.error("Order placement failed:", error)
-      const msg = error?.response?.data?.message || error?.message || "Failed to place order. Please try again."
+      console.error("Order creation failed:", error)
+      const msg = error?.response?.data?.message || error?.message || "Failed to create order. Please try again."
       alert(msg)
     } finally {
       setLoading(false)
+      setShowConfirm(false)
+      setPendingOrderData(null)
     }
   }
 
@@ -224,7 +251,7 @@ const Checkout = () => {
             <div className="rounded-lg p-2 sm:p-6">
               <h2 className="text-2xl font-semibold text-gray-800 mb-6">Customer Information</h2>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handlePlaceOrder} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="firstName" className="sr-only">First Name *</label>
@@ -616,6 +643,41 @@ const Checkout = () => {
           </div>
         </div>
       </div>
+
+      {/* Confirm Order Modal */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-[#dfdfd8] w-full max-w-md mx-4 border-2 border-gray-700 p-6">
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Confirm Your Order</h3>
+            <p className="text-gray-800 mb-4">Please confirm to place your order and receive the confirmation email.</p>
+
+            <div className="space-y-2 text-gray-900">
+              <div className="flex justify-between"><span>Items</span><span>{cartItems.length}</span></div>
+              <div className="flex justify-between"><span>Total</span><span>Rs.{getCartTotal().toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>Payment</span><span>{pendingOrderData?.paymentMethod}</span></div>
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                className="flex-1 border-2 border-gray-600 text-gray-900 py-3 font-semibold"
+                onClick={() => { setShowConfirm(false); setPendingOrderData(null) }}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="flex-1 bg-gray-700 hover:bg-gray-800 text-white py-3 font-semibold disabled:bg-gray-400"
+                onClick={handleConfirmOrder}
+                disabled={loading}
+              >
+                {loading ? 'Confirming…' : 'Order Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

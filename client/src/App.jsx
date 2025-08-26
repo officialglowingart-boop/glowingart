@@ -45,6 +45,7 @@ function App() {
 
               {/* Payment Routes - No Header/Footer */}
               <Route path="/payment" element={<Payment />} />
+              <Route path="/payment/online" element={<PaymentDetails />} />
               <Route path="/payment/:orderNumber" element={<PaymentDetails />} />
               <Route path="/payment/:orderNumber/success" element={<PaymentSuccess />} />
 

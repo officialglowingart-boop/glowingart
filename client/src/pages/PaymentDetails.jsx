@@ -1,13 +1,14 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { useParams, useNavigate } from "react-router-dom"
-import { getPaymentInstructions, confirmPayment } from "../services/api"
+import { useParams, useNavigate, useLocation } from "react-router-dom"
+import { getPaymentInstructions, confirmPayment, createOrder } from "../services/api"
 import { FiPackage } from "react-icons/fi"
 
 const PaymentDetails = () => {
   const { orderNumber } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -18,6 +19,8 @@ const PaymentDetails = () => {
     receipt: null,
     notes: "",
   })
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [pendingOrderData, setPendingOrderData] = useState(null)
 
   // Preview & modal state for uploaded image
   const [isImageModalOpen, setIsImageModalOpen] = useState(false)
@@ -25,6 +28,21 @@ const PaymentDetails = () => {
   const fileInputRef = useRef(null)
 
   useEffect(() => {
+    // If we came from Checkout with pending order (online), we won't have an orderNumber yet.
+    const pending = location.state?.pendingOrder
+    if (!orderNumber && pending) {
+      // Build a client-side preview of order for the page
+      setOrder({
+        orderNumber: "PENDING",
+        subtotal: pending.subtotal,
+        total: pending.total,
+        shippingProtection: pending.shippingProtection,
+        paymentMethod: pending.paymentMethod,
+      })
+      setPendingOrderData(pending)
+      setLoading(false)
+      return
+    }
     fetchPaymentInstructions()
   }, [orderNumber])
 
@@ -81,42 +99,60 @@ const PaymentDetails = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!paymentData.transactionId.trim()) {
-      alert("Please enter transaction ID")
+    // For online flow: open the confirmation modal instead of immediately creating order
+    setShowConfirmModal(true)
+  }
+
+  // Confirm Order modal action for online payments
+  const handleConfirmOrder = async () => {
+    if (!pendingOrderData && !orderNumber) {
+      setShowConfirmModal(false)
       return
     }
 
     setSubmitting(true)
     try {
-      const formData = new FormData()
-      formData.append("transactionId", paymentData.transactionId)
-      formData.append("notes", paymentData.notes)
-      if (paymentData.receipt) {
-        formData.append("receipt", paymentData.receipt)
+      let finalOrderNumber = orderNumber
+      let createdOrder = null
+
+      // If we don't have an order yet, create it now
+      if (!finalOrderNumber && pendingOrderData) {
+        const result = await createOrder(pendingOrderData)
+        createdOrder = result?.order
+        if (!createdOrder?.orderNumber) throw new Error("Failed to create order")
+        finalOrderNumber = createdOrder.orderNumber
       }
 
-    const result = await confirmPayment(orderNumber, formData)
-      // Navigate to success page with lightweight order details
-      navigate(`/payment/${orderNumber}/success`, {
-        state: {
-      type: "online",
-          order: {
-            orderNumber: order?.orderNumber || orderNumber,
-            subtotal: order?.subtotal,
-            total: order?.total,
-            shippingProtection: order?.shippingProtection,
-            paymentMethod: order?.paymentMethod,
-          },
-          server: result,
-        },
+      // If user provided transaction info, submit it; optional upload
+      if (paymentData.transactionId?.trim()) {
+        const formData = new FormData()
+        formData.append("transactionId", paymentData.transactionId)
+        formData.append("notes", paymentData.notes)
+        if (paymentData.receipt) {
+          formData.append("receipt", paymentData.receipt)
+        }
+        await confirmPayment(finalOrderNumber, formData)
+      }
+
+      // Navigate to success with details
+      const summary = {
+        orderNumber: createdOrder?.orderNumber || order?.orderNumber || finalOrderNumber,
+        subtotal: createdOrder?.subtotal ?? order?.subtotal,
+        total: createdOrder?.total ?? order?.total,
+        shippingProtection: createdOrder?.shippingProtection ?? order?.shippingProtection,
+        paymentMethod: createdOrder?.paymentMethod ?? order?.paymentMethod,
+      }
+      navigate(`/payment/${finalOrderNumber}/success`, {
+        state: { type: "online", order: summary },
         replace: true,
       })
     } catch (error) {
-      console.error("Error confirming payment:", error)
-      const msg = error?.response?.data?.message || "Error submitting payment confirmation. Please try again."
+      console.error("Online order creation/confirmation failed:", error)
+      const msg = error?.response?.data?.message || error?.message || "Failed to process order. Please try again."
       alert(msg)
     } finally {
       setSubmitting(false)
+      setShowConfirmModal(false)
     }
   }
 
@@ -524,6 +560,37 @@ const PaymentDetails = () => {
               ✕
             </button>
             <img src={previewUrl} alt="Receipt full size" className="w-full max-h-[80vh] object-contain rounded-md" />
+          </div>
+        </div>
+      )}
+      {/* Confirm Order Modal (Online payments) */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white w-full max-w-md border border-gray-300 rounded-md p-6">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Confirm Your Order</h3>
+            <p className="text-gray-700 mb-4">Your order will be created and a confirmation email will be sent.</p>
+            <div className="space-y-2 text-gray-900 text-sm">
+              <div className="flex justify-between"><span>Payment</span><span>{order?.paymentMethod}</span></div>
+              <div className="flex justify-between"><span>Total</span><span>Rs.{(order?.total || 0).toLocaleString()}</span></div>
+            </div>
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                className="flex-1 border border-gray-400 py-2 rounded-md"
+                onClick={() => setShowConfirmModal(false)}
+                disabled={submitting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="flex-1 bg-[#333] text-white py-2 rounded-md disabled:bg-gray-400"
+                onClick={handleConfirmOrder}
+                disabled={submitting}
+              >
+                {submitting ? "Confirming…" : "Confirm Order"}
+              </button>
+            </div>
           </div>
         </div>
       )}
