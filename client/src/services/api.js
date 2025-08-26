@@ -1,7 +1,12 @@
 import axios from "axios"
 
-const API_BASE_URL = "https://glowingart-ruddy.vercel.app/api"
-// const API_BASE_URL = "http://localhost:5000/api"
+// Determine API base URL dynamically: prefer env, else localhost for dev, else production URL
+let API_BASE_URL = import.meta?.env?.VITE_API_BASE_URL
+if (!API_BASE_URL) {
+  const isBrowser = typeof window !== "undefined"
+  const isLocalhost = isBrowser && /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname)
+  API_BASE_URL = isLocalhost ? "http://localhost:5000/api" : "https://glowingart-ruddy.vercel.app/api"
+}
 
 
 const api = axios.create({

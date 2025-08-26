@@ -1,6 +1,9 @@
 const nodemailer = require("nodemailer")
 const twilio = require("twilio")
 
+let __cachedTransporter = null
+let __cachedKey = null
+
 const createEmailTransporter = () => {
   // Hardcoded fallback credentials for Zoho email
   const FALLBACK_EMAIL_CONFIG = {
@@ -90,6 +93,12 @@ const createEmailTransporter = () => {
   console.log(`   Port: ${emailPort}`)
 
   try {
+    // Build a cache key to detect config changes
+    const key = `${emailHost}|${emailPort}|${emailUser}`
+    if (__cachedTransporter && __cachedKey === key) {
+      console.log("📧 [DEBUG] Reusing cached email transporter")
+      return __cachedTransporter
+    }
     const inProduction = process.env.NODE_ENV === "production" || process.env.VERCEL === "1" || process.env.VERCEL
     const useSecure = Number(emailPort) === 465
 
@@ -121,7 +130,9 @@ const createEmailTransporter = () => {
       debug: process.env.NODE_ENV === "development",
     })
 
-    console.log("✅ Zoho email transporter configured successfully")
+  console.log("✅ Zoho email transporter configured successfully")
+  __cachedTransporter = transporter
+  __cachedKey = key
     // Skip verify in production/serverless to avoid timeouts; still verify in development
     if (!inProduction) {
       transporter
@@ -149,9 +160,11 @@ const createEmailTransporter = () => {
         })
     }
 
-    return transporter
+  return transporter
   } catch (error) {
     console.log("❌ Failed to create Zoho email transporter:", error.message)
+  __cachedTransporter = null
+  __cachedKey = null
     return null
   }
 }
