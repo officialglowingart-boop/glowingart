@@ -99,7 +99,17 @@ const PaymentDetails = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    // For online flow: open the confirmation modal instead of immediately creating order
+    // Validate required fields for online payments: transaction ID and receipt must be provided
+    const tx = paymentData.transactionId?.trim()
+    if (!tx || tx.length < 3) {
+      alert("Transaction ID / Reference Number is required")
+      return
+    }
+    if (!paymentData.receipt) {
+      alert("Payment receipt is required")
+      return
+    }
+    // Open the confirmation modal instead of immediately creating order
     setShowConfirmModal(true)
   }
 
@@ -112,6 +122,13 @@ const PaymentDetails = () => {
 
     setSubmitting(true)
     try {
+      // Re-validate before proceeding (defense-in-depth)
+      const tx = paymentData.transactionId?.trim()
+      if (!tx || tx.length < 3 || !paymentData.receipt) {
+        alert("Please provide both Transaction ID and upload the payment receipt.")
+        setShowConfirmModal(false)
+        return
+      }
       let finalOrderNumber = orderNumber
       let createdOrder = null
 
@@ -124,13 +141,11 @@ const PaymentDetails = () => {
       }
 
       // If user provided transaction info, submit it; optional upload
-      if (paymentData.transactionId?.trim()) {
+      if (tx) {
         const formData = new FormData()
-        formData.append("transactionId", paymentData.transactionId)
+        formData.append("transactionId", tx)
         formData.append("notes", paymentData.notes)
-        if (paymentData.receipt) {
-          formData.append("receipt", paymentData.receipt)
-        }
+        formData.append("receipt", paymentData.receipt)
         await confirmPayment(finalOrderNumber, formData)
       }
 
@@ -471,7 +486,7 @@ const PaymentDetails = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Upload Payment Receipt (Optional)
+                      Upload Payment Receipt *
                     </label>
                     <input
                       type="file"
@@ -479,6 +494,7 @@ const PaymentDetails = () => {
                       ref={fileInputRef}
                       onChange={handleFileChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                      required
                     />
                     <p className="text-xs text-gray-500 mt-1">Max file size: 5MB. Supported formats: JPG, PNG, PDF</p>
                   </div>
@@ -533,7 +549,9 @@ const PaymentDetails = () => {
 
                   <button
                     type="submit"
-                    disabled={submitting}
+                    disabled={
+                      submitting || !(paymentData.transactionId?.trim()?.length >= 3 && !!paymentData.receipt)
+                    }
                     className="w-full bg-[#333] hover:bg-[#333] disabled:bg-gray-400 text-white py-3 px-4 rounded-lg font-medium transition-colors"
                   >
                     {submitting ? "Submitting..." : "Confirm Payment"}

@@ -159,7 +159,7 @@ router.get("/instructions/:orderNumber", async (req, res) => {
   }
 })
 
-// Confirm payment submission (with receipt optional)
+// Confirm payment submission (receipt required)
 router.post(
   "/confirm/:orderNumber",
   (req, res, next) => {
@@ -179,6 +179,9 @@ router.post(
     if (!transactionId || String(transactionId).trim().length < 3) {
       return res.status(400).json({ message: "Transaction ID is required" })
     }
+    if (!req.file) {
+      return res.status(400).json({ message: "Payment receipt is required" })
+    }
 
     const order = await Order.findOne({ orderNumber: req.params.orderNumber })
 
@@ -190,7 +193,7 @@ router.post(
     const paymentVerification = new PaymentVerification({
       order: order._id,
       transactionId,
-      receiptUrl: req.file && hasCloudinaryConfig ? req.file.path : null,
+  receiptUrl: req.file && hasCloudinaryConfig ? req.file.path : null,
       notes,
     })
 
