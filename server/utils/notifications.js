@@ -90,57 +90,64 @@ const createEmailTransporter = () => {
   console.log(`   Port: ${emailPort}`)
 
   try {
+    const inProduction = process.env.NODE_ENV === "production" || process.env.VERCEL === "1" || process.env.VERCEL
+    const useSecure = Number(emailPort) === 465
+
     const transporter = nodemailer.createTransport({
       host: emailHost,
       port: emailPort,
-      secure: false, // Use STARTTLS for port 587
+      secure: useSecure, // true for 465, false for 587 STARTTLS
       auth: {
         user: emailUser,
         pass: emailPass,
       },
       tls: {
+        // Keep strict TLS, but allow min/max versions
         rejectUnauthorized: true,
         minVersion: "TLSv1.2",
         maxVersion: "TLSv1.3",
       },
-      connectionTimeout: 60000, // Increased for Zoho
-      greetingTimeout: 30000,
-      socketTimeout: 60000,
-      pool: true,
-      maxConnections: 3, // Reduced for Zoho limits
-      maxMessages: 20, // Reduced for Zoho limits
-      rateLimit: 5, // Reduced for Zoho compliance
+      connectionTimeout: inProduction ? 30000 : 60000,
+      greetingTimeout: inProduction ? 15000 : 30000,
+      socketTimeout: inProduction ? 30000 : 60000,
+      // Pooling can cause issues on serverless; disable in production
+      pool: inProduction ? false : true,
+      maxConnections: 3,
+      maxMessages: 20,
+      rateLimit: 5,
       rateDelta: 1000,
-      requireTLS: true,
+      requireTLS: !useSecure, // STARTTLS only applies when not using implicit TLS
       logger: process.env.NODE_ENV === "development",
       debug: process.env.NODE_ENV === "development",
     })
 
     console.log("✅ Zoho email transporter configured successfully")
-
-    transporter
-      .verify()
-      .then(() => {
-        console.log("✅ Zoho SMTP server connection verified")
-      })
-      .catch((error) => {
-        console.log("❌ Zoho SMTP connection verification failed:")
-        console.log(`   Error: ${error.message}`)
-        if (error.code === "EAUTH") {
-          console.log("   💡 Zoho authentication failed:")
-          console.log("   💡 1. Verify EMAIL_USER is your full Zoho email address")
-          console.log("   💡 2. Verify EMAIL_PASS is your Zoho app password (not regular password)")
-          console.log("   💡 3. Generate new app password: Zoho Mail → Settings → Security → App Passwords")
-        } else if (error.code === "ECONNECTION") {
-          console.log("   💡 Connection failed to Zoho servers:")
-          console.log("   💡 1. Check if EMAIL_HOST=smtp.zoho.com")
-          console.log("   💡 2. Check if EMAIL_PORT=587")
-          console.log("   💡 3. Production servers may have firewall restrictions")
-        } else if (error.code === "ETIMEDOUT") {
-          console.log("   💡 Connection timeout to Zoho - this is common in production")
-          console.log("   💡 Emails may still work despite this verification timeout")
-        }
-      })
+    // Skip verify in production/serverless to avoid timeouts; still verify in development
+    if (!inProduction) {
+      transporter
+        .verify()
+        .then(() => {
+          console.log("✅ Zoho SMTP server connection verified")
+        })
+        .catch((error) => {
+          console.log("❌ Zoho SMTP connection verification failed:")
+          console.log(`   Error: ${error.message}`)
+          if (error.code === "EAUTH") {
+            console.log("   💡 Zoho authentication failed:")
+            console.log("   💡 1. Verify EMAIL_USER is your full Zoho email address")
+            console.log("   💡 2. Verify EMAIL_PASS is your Zoho app password (not regular password)")
+            console.log("   💡 3. Generate new app password: Zoho Mail → Settings → Security → App Passwords")
+          } else if (error.code === "ECONNECTION") {
+            console.log("   💡 Connection failed to Zoho servers:")
+            console.log("   💡 1. Check if EMAIL_HOST=smtp.zoho.com")
+            console.log("   💡 2. Check if EMAIL_PORT=587 or 465")
+            console.log("   💡 3. Production servers may have firewall restrictions")
+          } else if (error.code === "ETIMEDOUT") {
+            console.log("   💡 Connection timeout to Zoho - this is common in production")
+            console.log("   💡 Emails may still work despite this verification timeout")
+          }
+        })
+    }
 
     return transporter
   } catch (error) {
