@@ -332,7 +332,7 @@ const getEmailTemplate = (type, data) => {
           </p>
         </div>
         <div class="footer">
-          <p><strong>Questions?</strong> Contact us at ${process.env.EMAIL_USER} or WhatsApp: +92-XXX-XXXXXXX</p>
+          <p><strong>Questions?</strong> Contact us at support@glowing-art.com or WhatsApp: +92-XXX-XXXXXXX</p>
           <p style="color: #666; font-size: 0.9rem;">Thank you for choosing Glowing-Art!</p>
         </div>
       </div>
@@ -451,7 +451,7 @@ const getEmailTemplate = (type, data) => {
           </div>
         </div>
         <div class="footer">
-          <p>Need help? Contact us at ${process.env.EMAIL_USER}</p>
+          <p>Need help? Contact us at support@glowing-art.com</p>
         </div>
       </div>
     `,
@@ -830,10 +830,12 @@ const sendEmail = async (type, to, subject, data, retryCount = 0) => {
       "enter_your",
     ]
 
+    // Always align the From address with the authenticated SMTP user to avoid relay rejections (553)
+    // Prefer env EMAIL_USER when valid; otherwise fall back to the Zoho auth user
     let senderEmail = envEmailUser
     if (!envEmailUser || placeholderPatterns.some((pattern) => envEmailUser.toLowerCase().includes(pattern))) {
-      senderEmail = "support@glowing-art.com" // Use hardcoded fallback
-      console.log(`📧 [DEBUG] Using hardcoded sender email: ${senderEmail}`)
+      senderEmail = "order@glowing-art.com" // Fallback to the authenticated Zoho mailbox
+      console.log(`📧 [DEBUG] Using hardcoded sender email (auth user): ${senderEmail}`)
     } else {
       console.log(`📧 [DEBUG] Using environment sender email: ${senderEmail}`)
     }
@@ -845,9 +847,15 @@ const sendEmail = async (type, to, subject, data, retryCount = 0) => {
       to: to.trim(),
       subject,
       html: htmlContent,
+      // Ensure SMTP envelope MAIL FROM matches the authenticated sender to avoid 553 relay issues
+      envelope: {
+        from: senderEmail,
+        to: to.trim(),
+      },
       headers: {
         "Message-ID": messageId,
-        "Reply-To": senderEmail, // Use same sender email for Reply-To
+        // Let replies go to support while keeping From aligned with SMTP auth user
+        "Reply-To": "support@glowing-art.com",
       },
       text: `
 Order Confirmation - ${data.order?.orderNumber || "N/A"}
@@ -862,7 +870,7 @@ Payment Method: ${data.order?.paymentMethod || "N/A"}
 
 Track your order: ${process.env.FRONTEND_URL || "http://localhost:3000"}/track/${data.order?.orderNumber || ""}
 
-Questions? Contact us at ${senderEmail}
+Questions? Contact us at support@glowing-art.com
 
 Thank you for choosing Glowing-Art!
       `.trim(),
