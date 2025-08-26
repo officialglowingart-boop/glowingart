@@ -126,7 +126,20 @@ const Checkout = () => {
         clearCart()
 
         if (pendingOrderData.paymentMethod === "COD") {
-          navigate(`/payment/${order.orderNumber}`)
+          // Show success modal page (same as online) for COD
+          navigate(`/payment/${order.orderNumber}/success`, {
+            state: {
+              type: "cod",
+              order: {
+                orderNumber: order.orderNumber,
+                subtotal: pendingOrderData.subtotal,
+                total: pendingOrderData.total,
+                shippingProtection: pendingOrderData.shippingProtection,
+                paymentMethod: pendingOrderData.paymentMethod,
+              },
+            },
+            replace: true,
+          })
         } else {
           const orderWithDetails = {
             ...order,

@@ -41,16 +41,16 @@ const PaymentSuccess = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#dfdfd8] from-emerald-50 to-emerald-100 flex items-center justify-center p-4">
-      <div className="bg-white/90 backdrop-blur rounded-2xl shadow-xl max-w-lg w-full sm:p-5 p-2  relative">
+    <div className="min-h-screen bg-[#dfdfd8] flex items-center justify-center p-4">
+      <div className="bg-[#dfdfd8] rounded-2xl max-w-lg w-full sm:p-5 p-2 relative">
         {/* Close button */}
-        <button
+        {/* <button
           aria-label="Close"
           onClick={() => navigate("/")}
-          className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
         >
           ✕
-        </button>
+        </button> */}
 
         {/* Icon */}
         <div className="mx-auto mb-6 w-20 h-20 rounded-full bg-emerald-500 shadow-lg flex items-center justify-center m-7">
@@ -68,11 +68,11 @@ const PaymentSuccess = () => {
         {(() => {
           const isCOD = location.state?.type === "cod" || order?.paymentMethod === "COD"
           return isCOD ? (
-          <p className="text-center text-gray-600 mt-2">
+          <p className="text-center text-gray-700 mt-2">
             Thank you for your purchase! Your COD order has been placed. We’ll contact you for delivery details.
           </p>
         ) : (
-          <p className="text-center text-gray-600 mt-2">
+          <p className="text-center text-gray-700 mt-2">
             Your payment details have been received. We’ll verify and update your order status shortly.
           </p>
         )
@@ -118,8 +118,8 @@ const PaymentSuccess = () => {
             )}
             {typeof order?.total === "number" && (
               <div className="flex justify-between font-semibold pt-2 border-t border-gray-200">
-                <span>Total</span>
-                <span>Rs.{order.total.toLocaleString()}</span>
+                <span className="text-gray-900">Total</span>
+                <span className="text-gray-900">Rs.{order.total.toLocaleString()}</span>
               </div>
             )}
           </div>
@@ -140,18 +140,16 @@ const PaymentSuccess = () => {
                   </p>
                 </div>
               )}
-              <div className={`flex ${!isCOD ? "flex-col sm:flex-row gap-3" : ""}`}>
-                {!isCOD && (
-                  <button
-                    onClick={() => navigate(`/order-tracking/${orderNo}`)}
-                    className="w-full sm:flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg font-medium shadow"
-                  >
-                    Track order
-                  </button>
-                )}
+              <div className={"flex flex-col sm:flex-row gap-3"}>
+                <button
+                  onClick={() => navigate(`/order-tracking/${orderNo}`)}
+                  className="w-full sm:flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg font-medium"
+                >
+                  Track order
+                </button>
                 <button
                   onClick={() => navigate("/")}
-                  className={`w-full ${!isCOD ? "sm:flex-1" : ""} bg-[#333] text-white py-3 rounded-lg font-medium shadow`}
+                  className={`w-full sm:flex-1 bg-[#333] text-white py-3 rounded-lg font-medium`}
                 >
                   Continue shopping
                 </button>
