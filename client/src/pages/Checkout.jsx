@@ -255,7 +255,7 @@ const Checkout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#dfdfd8] py-3 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
+    <div className="min-h-screen bg-[#dfdfd8] py-3 pb-28 md:pb-20 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
       <div className="container mx-auto max-w-7xl px-4">
         <h1 className="text-center text-4xl font-bold text-gray-800 mb-2" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>Checkout</h1>
 
