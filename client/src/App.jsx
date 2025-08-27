@@ -6,6 +6,9 @@ import Footer from "./components/Footer"
 import MobileBottomNav from "./components/MobileBottomNav"
 import Home from "./pages/Home"
 import PrivacyPolicy from "./pages/PrivacyPolicy"
+import RefundPolicy from "./pages/RefundPolicy"
+import TermsOfService from "./pages/TermsOfService"
+import ShippingPolicy from "./pages/ShippingPolicy"
 import OrderTracking from "./pages/OrderTracking"
 import CommonQuestions from "./pages/CommonQuestions"
 import Contact from "./pages/Contact"
@@ -59,6 +62,9 @@ function App() {
                       <Routes>
                         <Route path="/" element={<Home />} />
                         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                        <Route path="/refund-policy" element={<RefundPolicy />} />
+                        <Route path="/terms-of-service" element={<TermsOfService />} />
+                        <Route path="/shipping-policy" element={<ShippingPolicy />} />
                         <Route path="/products" element={<Products />} />
                         <Route path="/track-order" element={<OrderTracking />} />
                         <Route path="/track-order/:orderNumber" element={<OrderTracking />} />
@@ -69,7 +75,6 @@ function App() {
                         <Route path="/category/:categoryName" element={<Category />} />
                         <Route path="/product/:id" element={<ProductDetail />} />
                         <Route path="/checkout" element={<Checkout />} />
-                        {/* Payment routes moved out to hide Header/Footer */}
 
                         {/* 404 Route */}
                         <Route
