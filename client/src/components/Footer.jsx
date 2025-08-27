@@ -97,7 +97,7 @@ export default function Footer() {
           {/* Left */}
           <div className="order-1 md:order-1 w-full md:w-auto text-center md:text-left">
             <p className="text-black text-md" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
-              <strong>© 2025 Basesunworks</strong>
+              <strong>© 2025 Glowing-Art</strong>
             </p>
           </div>
 

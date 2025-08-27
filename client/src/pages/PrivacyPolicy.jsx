@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { HiMail, HiPhone } from 'react-icons/hi';
 const PrivacyPolicy = () => {
   return (
     <div className="min-h-screen font-serif pb-28 md:pb-20" style={{ backgroundColor: "#dfdfd8", fontFamily: 'Times, "Times New Roman", serif' }}>
@@ -119,36 +119,46 @@ const PrivacyPolicy = () => {
               </p>
             </section>
 
-            <section>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">11. Contact Information</h2>
-              <p className="mb-4">
-                If you have any questions about this Privacy Policy or our data practices, please contact us at:
-              </p>
-              <div className="bg-gray-50 p-4 " style={{ backgroundColor: "#dfdfd8"}}>
-                <p><strong>Email:</strong> privacy@glowing-gallery.com</p>
-                <p><strong>Phone:</strong> +92 300 1234567</p>
-                <p><strong>Address:</strong> Karachi, Pakistan</p>
-              </div>
-            </section>
+      
+                <section>
+                  <h2 className="text-2xl font-bold text-black mb-4" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
+                    7. Contact Us
+                  </h2>
+                  <div className="text-gray-800 leading-relaxed" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
+                    <p className="mb-4">
+                      If you have questions, please contact us at:
+                    </p>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <HiMail className="text-blue-600 text-xl flex-shrink-0" />
+                        <p style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
+                          <strong>Email:</strong> <a href="mailto:support@glowing-art.com" className="text-blue-600 hover:text-blue-800 underline font-medium">support@glowing-art.com</a>
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <HiPhone className="text-green-600 text-xl flex-shrink-0" />
+                        <p style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
+                          <strong>Phone:</strong> <a href="tel:+923260230367" className="text-green-600 hover:text-green-800 underline font-medium">+92 326 0230 367</a>
+                        </p>
+                      </div>
+                   
+                    </div>
+                  </div>
+                </section>
 
-            <div className="border-t pt-6 mt-8">
-              <p className="text-sm text-gray-600">
-                <strong>Last Updated:</strong> August 14, 2025
-              </p>
-            </div>
+          
           </div>
         </div>
 
         {/* Newsletter Section */}
-        <div className="text-center bg-white rounded-lg sm:p-8 shadow-sm mt-8" style={{ backgroundColor: "#dfdfd8"}}>
+        {/* <div className="text-center bg-white rounded-lg sm:p-8 shadow-sm mt-8" style={{ backgroundColor: "#dfdfd8"}}>
           <h2 className="text-3xl font-bold text-gray-800 mb-4 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
             Stay up to Date!
           </h2>
           <p className="text-gray-600 mb-8 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
             Get updates on new Releases and exciting Discounts!
           </p>
-          {/* Mobile: stacked input and button with shadow; Desktop: keep existing inline layout */}
-          {/* Mobile UI */}
+         
           <div className="md:hidden max-w-sm mx-auto w-full px-3">
             <div className="rounded-md shadow-md border border-black/20 overflow-hidden">
               <input
@@ -163,7 +173,7 @@ const PrivacyPolicy = () => {
             </div>
           </div>
 
-          {/* Desktop UI (unchanged) */}
+        
           <div className="hidden md:flex max-w-md mx-auto border border-black overflow-hidden">
             <input
               type="email"
@@ -175,7 +185,7 @@ const PrivacyPolicy = () => {
               →
             </button>
           </div>
-        </div>
+        </div> */}
       </div>
 
     
