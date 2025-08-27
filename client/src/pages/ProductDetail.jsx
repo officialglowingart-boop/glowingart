@@ -162,7 +162,7 @@ const ProductDetail = () => {
 
   return (
     <>
-    <div className="min-h-screen bg-[#F5F3F0]">
+  <div className="min-h-screen bg-[#F5F3F0] pb-28 md:pb-20">
       {/* Header Section with breadcrumb */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">

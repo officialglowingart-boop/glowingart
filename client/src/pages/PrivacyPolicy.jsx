@@ -2,7 +2,7 @@ import React from 'react';
 
 const PrivacyPolicy = () => {
   return (
-    <div className="min-h-screen font-serif" style={{ backgroundColor: "#dfdfd8", fontFamily: 'Times, "Times New Roman", serif' }}>
+    <div className="min-h-screen font-serif pb-28 md:pb-20" style={{ backgroundColor: "#dfdfd8", fontFamily: 'Times, "Times New Roman", serif' }}>
       {/* Main Content */}
       <div className="max-w-5xl mx-auto px-4 py-4" >
         <h1 className="sm:text-5xl text-3xl font-bold text-center text-gray-900 sm:mb-12 mb-6 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
@@ -147,12 +147,29 @@ const PrivacyPolicy = () => {
           <p className="text-gray-600 mb-8 font-serif" style={{ fontFamily: 'Times, "Times New Roman", serif' }}>
             Get updates on new Releases and exciting Discounts!
           </p>
-          <div className="flex max-w-md mx-auto border border-black overflow-hidden">
+          {/* Mobile: stacked input and button with shadow; Desktop: keep existing inline layout */}
+          {/* Mobile UI */}
+          <div className="md:hidden max-w-sm mx-auto w-full px-3">
+            <div className="rounded-md shadow-md border border-black/20 overflow-hidden">
+              <input
+                type="email"
+                placeholder="Email"
+                className="w-full px-3 py-1.5 bg-white text-gray-800 placeholder-gray-500 outline-none"
+                style={{ fontFamily: 'Times, \"Times New Roman\", serif', backgroundColor: "#ffffff" }}
+              />
+              <button className="w-full bg-gray-800 text-white py-1.5 hover:bg-gray-700 transition-colors duration-200 font-serif">
+                →
+              </button>
+            </div>
+          </div>
+
+          {/* Desktop UI (unchanged) */}
+          <div className="hidden md:flex max-w-md mx-auto border border-black overflow-hidden">
             <input
               type="email"
               placeholder="Email"
-              className="flex-1 px-4 py-3 outline-none text-gray-700 font-serif"
-              style={{ fontFamily: 'Times, "Times New Roman", serif', backgroundColor: "#dfdfd8" }}
+              className="flex-1 px-4 py-3 outline-none text-gray-700 font-serif bg-white"
+              style={{ fontFamily: 'Times, \"Times New Roman\", serif', backgroundColor: "#ffffff" }}
             />
             <button className="bg-gray-800 text-white px-6 py-3 hover:bg-gray-700 transition-colors duration-200 font-serif">
               →

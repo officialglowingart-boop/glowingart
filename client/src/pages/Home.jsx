@@ -404,14 +404,30 @@ const Home = () => {
           >
             Get updates on new Releases and exciting Discounts!
           </p>
-          <div className="flex flex-col sm:flex-row max-w-md mx-auto border-2 border-gray-300 rounded-lg overflow-hidden">
+          {/* Mobile UI: stacked input and button */}
+          <div className="md:hidden max-w-sm mx-auto w-full px-3">
+            <div className="rounded-md shadow-md border border-black/20 overflow-hidden">
+              <input
+                type="email"
+                placeholder="Email"
+                className="w-full px-3 py-1.5 bg-white text-gray-800 placeholder-gray-500 outline-none"
+                style={{ fontFamily: 'Times, \"Times New Roman\", serif', backgroundColor: '#ffffff' }}
+              />
+              <button className="w-full bg-gray-800 text-white py-1.5 hover:bg-gray-700 transition-colors duration-200 font-serif">
+                →
+              </button>
+            </div>
+          </div>
+
+          {/* Desktop UI: original inline input + button */}
+          <div className="hidden md:flex max-w-md mx-auto border-2 border-gray-300 rounded-lg overflow-hidden">
             <input
               type="email"
               placeholder="Email"
-              className="flex-1 px-3 sm:px-4 py-2 sm:py-3 outline-none text-gray-700 font-serif text-sm sm:text-base"
-              style={{ fontFamily: 'Times, "Times New Roman", serif' }}
+              className="flex-1 px-4 py-3 outline-none text-gray-700 font-serif bg-white"
+              style={{ fontFamily: 'Times, \"Times New Roman\", serif', backgroundColor: '#ffffff' }}
             />
-            <button className="bg-gray-800 text-white px-4 sm:px-6 py-2 sm:py-3 hover:bg-gray-700 transition-colors duration-200 font-serif text-sm sm:text-base">
+            <button className="bg-gray-800 text-white px-6 py-3 hover:bg-gray-700 transition-colors duration-200 font-serif">
               →
             </button>
           </div>
