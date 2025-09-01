@@ -5,6 +5,10 @@ import { getCategories, createCategory, updateCategory, deleteCategory } from ".
 
 const CategoryManagement = () => {
   const [categories, setCategories] = useState([])
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
+  const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
   const [showForm, setShowForm] = useState(false)
   const [editingCategory, setEditingCategory] = useState(null)
   const [formData, setFormData] = useState({
@@ -15,13 +19,28 @@ const CategoryManagement = () => {
   })
 
   useEffect(() => {
-    fetchCategories()
-  }, [])
+    fetchCategories(page, limit)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, limit])
 
-  const fetchCategories = async () => {
+  const fetchCategories = async (pageParam = 1, limitParam = 10) => {
     try {
-      const response = await getCategories(true) // admin = true
-      setCategories(response.categories)
+      const response = await getCategories(true, { page: pageParam, limit: limitParam }) // admin = true
+      // Support both paginated and non-paginated server responses
+      if (Array.isArray(response.categories)) {
+        setCategories(response.categories)
+        setTotal(response.categories.length)
+        setTotalPages(1)
+      } else if (response && response.data) {
+        // defensive branch if axios wrapped
+        setCategories(response.data.categories || [])
+        setTotal(response.data.total || 0)
+        setTotalPages(response.data.totalPages || 1)
+      } else {
+        setCategories(response.categories || [])
+        setTotal(response.total || 0)
+        setTotalPages(response.totalPages || 1)
+      }
     } catch (error) {
       console.error("Error fetching categories:", error)
     }
@@ -204,6 +223,41 @@ const CategoryManagement = () => {
             ))}
           </tbody>
         </table>
+        {/* Pagination */}
+        <div className="flex items-center justify-between p-4 border-t">
+          <div className="text-sm text-gray-600">Page {page} of {totalPages} • Total {total}</div>
+          <div className="flex items-center gap-3">
+            <label className="text-sm text-gray-600">Per page</label>
+            <select
+              value={limit}
+              onChange={(e) => {
+                setPage(1)
+                setLimit(parseInt(e.target.value, 10))
+              }}
+              className="border rounded px-2 py-1 text-sm"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1}
+                className={`px-3 py-1 rounded ${page <= 1 ? "bg-gray-200 text-gray-400" : "bg-gray-100 hover:bg-gray-200"}`}
+              >
+                Prev
+              </button>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+                className={`px-3 py-1 rounded ${page >= totalPages ? "bg-gray-200 text-gray-400" : "bg-gray-100 hover:bg-gray-200"}`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

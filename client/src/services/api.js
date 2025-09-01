@@ -71,8 +71,8 @@ export const verifyPayment = (id, verificationData) =>
   api.put(`/payments/admin/verify/${id}`, verificationData).then((res) => res.data)
 
 // Categories API
-export const getCategories = (admin = false) =>
-  api.get(admin ? "/categories/admin" : "/categories").then((res) => res.data)
+export const getCategories = (admin = false, params = {}) =>
+  api.get(admin ? "/categories/admin" : "/categories", { params }).then((res) => res.data)
 
 export const createCategory = (categoryData) => api.post("/categories", categoryData).then((res) => res.data)
 

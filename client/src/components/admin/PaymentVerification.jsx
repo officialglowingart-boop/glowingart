@@ -8,16 +8,23 @@ const PaymentVerification = () => {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState("pending")
   const [selectedPayment, setSelectedPayment] = useState(null)
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
+  const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
 
   useEffect(() => {
-    fetchPayments()
-  }, [filter])
+    fetchPayments(page, limit)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, page, limit])
 
-  const fetchPayments = async () => {
+  const fetchPayments = async (pageParam = 1, limitParam = 10) => {
     try {
-      const params = filter !== "all" ? { status: filter } : {}
+      const params = filter !== "all" ? { status: filter, page: pageParam, limit: limitParam } : { page: pageParam, limit: limitParam }
       const response = await getPaymentVerifications(params)
       setPayments(response.payments || [])
+      setTotalPages(response.totalPages || 1)
+      setTotal(response.total || (response.payments ? response.payments.length : 0))
     } catch (error) {
       console.error("Error fetching payments:", error)
     } finally {
@@ -73,7 +80,7 @@ const PaymentVerification = () => {
         </div>
       </div>
 
-      <div className="grid gap-6">
+  <div className="grid gap-6">
         {payments.map((payment) => (
           <div key={payment._id} className="bg-white rounded-lg shadow-md p-6">
             <div className="flex justify-between items-start mb-4">
@@ -113,7 +120,9 @@ const PaymentVerification = () => {
                     <p className="text-sm text-gray-700">{payment.notes}</p>
                   </div>
                 )}
-                <p className="text-xs text-gray-500 mt-2">Submitted: {new Date(payment.createdAt).toLocaleString()}</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Submitted: {new Date(payment.createdAt).toLocaleString(undefined, { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                </p>
               </div>
             </div>
 
@@ -149,6 +158,42 @@ const PaymentVerification = () => {
             )}
           </div>
         ))}
+      </div>
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between mt-6">
+        <div className="text-sm text-gray-600">Page {page} of {totalPages} • Total {total}</div>
+        <div className="flex items-center gap-3">
+          <label className="text-sm text-gray-600">Per page</label>
+          <select
+            value={limit}
+            onChange={(e) => {
+              setPage(1)
+              setLimit(parseInt(e.target.value, 10))
+            }}
+            className="border rounded px-2 py-1 text-sm"
+          >
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className={`px-3 py-1 rounded ${page <= 1 ? "bg-gray-200 text-gray-400" : "bg-gray-100 hover:bg-gray-200"}`}
+            >
+              Prev
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+              className={`px-3 py-1 rounded ${page >= totalPages ? "bg-gray-200 text-gray-400" : "bg-gray-100 hover:bg-gray-200"}`}
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
 
       {payments.length === 0 && (

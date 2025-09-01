@@ -5,6 +5,10 @@ import { getProducts, createProduct, updateProduct, deleteProduct, getCategories
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([])
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(12)
+  const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
@@ -30,10 +34,14 @@ const ProductManagement = () => {
   ])
 
   useEffect(() => {
-  // Load categories first for priority sorting, then products
-  fetchCategories()
-  fetchProducts()
+    // Load categories first for priority sorting (used in storefront), then products
+    fetchCategories()
   }, [])
+
+  useEffect(() => {
+    fetchProducts(page, limit)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, limit])
 
   const sortByCategoryPriority = (items = [], cats = []) => {
     // Build a priority map: lower sortOrder => higher priority
@@ -59,10 +67,13 @@ const ProductManagement = () => {
     })
   }
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (pageParam = 1, limitParam = 12) => {
     try {
-      const response = await getProducts()
-      setProducts(sortByCategoryPriority(response.products, categories))
+      const response = await getProducts({ page: pageParam, limit: limitParam })
+      // For admin management, use server sorting/pagination directly
+      setProducts(response.products || [])
+      setTotalPages(response.totalPages || 1)
+      setTotal(response.total || (response.products ? response.products.length : 0))
     } catch (error) {
       console.error("Error fetching products:", error)
     } finally {
@@ -490,6 +501,42 @@ const ProductManagement = () => {
               ))}
             </tbody>
           </table>
+        </div>
+        {/* Pagination */}
+        <div className="flex items-center justify-between mt-4">
+          <div className="text-sm text-gray-600">Page {page} of {totalPages} • Total {total}</div>
+          <div className="flex items-center gap-3">
+            <label className="text-sm text-gray-600">Per page</label>
+            <select
+              value={limit}
+              onChange={(e) => {
+                setPage(1)
+                setLimit(parseInt(e.target.value, 10))
+              }}
+              className="border rounded px-2 py-1 text-sm"
+            >
+              <option value={10}>10</option>
+              <option value={12}>12</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1}
+                className={`px-3 py-1 rounded ${page <= 1 ? "bg-gray-200 text-gray-400" : "bg-gray-100 hover:bg-gray-200"}`}
+              >
+                Prev
+              </button>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+                className={`px-3 py-1 rounded ${page >= totalPages ? "bg-gray-200 text-gray-400" : "bg-gray-100 hover:bg-gray-200"}`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

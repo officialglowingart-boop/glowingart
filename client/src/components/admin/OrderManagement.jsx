@@ -2000,7 +2000,7 @@ const OrderManagement = () => {
           order.paymentMethod,
           order.orderStatus,
           order.paymentStatus,
-          new Date(order.createdAt).toLocaleDateString(),
+          new Date(order.createdAt).toLocaleString(undefined, { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
         ].join(","),
       ),
     ].join("\n")
@@ -2361,7 +2361,7 @@ const OrderManagement = () => {
               <div>
                 <h4>Order Information</h4>
                 <p>
-                  <strong>Order Date:</strong> {new Date(selectedOrder.createdAt).toLocaleDateString()}
+                  <strong>Order Date:</strong> {new Date(selectedOrder.createdAt).toLocaleString(undefined, { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                 </p>
                 <p>
                   <strong>Payment Method:</strong> {selectedOrder.paymentMethod}
@@ -2411,7 +2411,7 @@ const OrderManagement = () => {
                     </p>
                     <p>
                       <strong>Submitted At:</strong>{" "}
-                      {new Date(selectedOrder.paymentDetails.paymentConfirmedAt).toLocaleString()}
+                      {new Date(selectedOrder.paymentDetails.paymentConfirmedAt).toLocaleString(undefined, { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                     </p>
                     {selectedOrder.paymentDetails.adminNotes && (
                       <p>
@@ -2652,7 +2652,7 @@ const OrderManagement = () => {
                       {order.orderStatus}
                     </span>
                   </td>
-                  <td style={{ padding: "1rem" }}>{new Date(order.createdAt).toLocaleDateString()}</td>
+                  <td style={{ padding: "1rem" }}>{new Date(order.createdAt).toLocaleString(undefined, { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
                   <td style={{ padding: "1rem" }}>
                     <button
                       onClick={() => setSelectedOrder(order)}

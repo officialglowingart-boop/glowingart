@@ -16,8 +16,27 @@ router.get("/", async (req, res) => {
 // Get all categories (admin)
 router.get("/admin", authenticateAdmin, async (req, res) => {
   try {
-    const categories = await Category.find().sort({ sortOrder: 1 })
-    res.json({ categories })
+    const { page, limit } = req.query
+    if (!page && !limit) {
+      const categories = await Category.find().sort({ sortOrder: 1 })
+      return res.json({ categories })
+    }
+
+    const pageNum = parseInt(page, 10) || 1
+    const limitNum = parseInt(limit, 10) || 10
+
+    const total = await Category.countDocuments()
+    const categories = await Category.find()
+      .sort({ sortOrder: 1 })
+      .limit(limitNum)
+      .skip((pageNum - 1) * limitNum)
+
+    res.json({
+      categories,
+      totalPages: Math.ceil(total / limitNum),
+      currentPage: pageNum,
+      total,
+    })
   } catch (error) {
     res.status(500).json({ message: "Error fetching categories", error: error.message })
   }
