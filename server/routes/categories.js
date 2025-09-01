@@ -22,6 +22,7 @@ router.get("/admin", authenticateAdmin, async (req, res) => {
       return res.json({ categories })
     }
 
+    
     const pageNum = parseInt(page, 10) || 1
     const limitNum = parseInt(limit, 10) || 10
 
