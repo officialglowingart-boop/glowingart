@@ -371,7 +371,7 @@ const AdminDashboard = () => {
             ) : (
               <>
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
                   <div className="bg-white rounded-lg shadow-md p-6 text-center">
                     <h3 className="text-3xl font-bold text-yellow-600 mb-2">{stats?.stats?.totalOrders || 0}</h3>
                     <p className="text-gray-600">Total Orders</p>
@@ -388,7 +388,13 @@ const AdminDashboard = () => {
                     <h3 className="text-3xl font-bold text-blue-600 mb-2">
                       Rs.{(stats?.stats?.totalRevenue || 0).toLocaleString()}
                     </h3>
-                    <p className="text-gray-600">Total Revenue</p>
+                    <p className="text-gray-600">Realized Revenue (Delivered)</p>
+                  </div>
+                  <div className="bg-white rounded-lg shadow-md p-6 text-center">
+                    <h3 className="text-3xl font-bold text-indigo-600 mb-2">
+                      Rs.{(stats?.stats?.grossRevenue || 0).toLocaleString()}
+                    </h3>
+                    <p className="text-gray-600">Gross Revenue (Paid)</p>
                   </div>
                 </div>
 

@@ -1112,8 +1112,15 @@ router.get("/dashboard", auth, async (req, res) => {
     const deliveredOrders = await Order.countDocuments({ orderStatus: "delivered" })
     const cancelledOrders = await Order.countDocuments({ orderStatus: "cancelled" })
 
-    const totalRevenue = await Order.aggregate([
+    // Gross revenue = sum of totals for PAID orders (money received)
+    const grossRevenueAgg = await Order.aggregate([
       { $match: { paymentStatus: "paid" } },
+      { $group: { _id: null, total: { $sum: "$total" } } },
+    ])
+
+    // Realized revenue = sum of totals for DELIVERED orders (order-based realization)
+    const realizedRevenueAgg = await Order.aggregate([
+      { $match: { orderStatus: "delivered" } },
       { $group: { _id: null, total: { $sum: "$total" } } },
     ])
 
@@ -1123,7 +1130,10 @@ router.get("/dashboard", auth, async (req, res) => {
       totalOrders,
       totalProducts,
       pendingOrders,
-      totalRevenue: totalRevenue[0]?.total || 0,
+      // Show revenue based on orders delivered (realized)
+      totalRevenue: realizedRevenueAgg[0]?.total || 0,
+      // Also return gross revenue from paid orders for secondary displays
+      grossRevenue: grossRevenueAgg[0]?.total || 0,
       processingOrders,
       confirmedOrders,
       shippedOrders,
